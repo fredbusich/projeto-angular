@@ -1,6 +1,6 @@
 import { DatePipe, I18nPluralPipe } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { NOMES_GRUPOS } from '../../modelos/exercicio';
+import { nomesDosGrupos } from '../../modelos/exercicio';
 import { Ficha, NOMES_TIPOS } from '../../modelos/ficha';
 
 // Cartão reutilizável de uma ficha de treino.
@@ -24,8 +24,7 @@ export class FichaCard {
 
   // "Peito · Ombros · Braços" (cada grupo só uma vez)
   protected get grupos(): string {
-    const unicos = new Set(this.ficha.exercicios.map((e) => NOMES_GRUPOS[e.grupo]));
-    return [...unicos].join(' · ');
+    return nomesDosGrupos(this.ficha.exercicios);
   }
 
   // Os primeiros 4 exercícios e "+2" se houver mais

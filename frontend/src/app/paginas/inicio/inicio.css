@@ -1,0 +1,119 @@
+.hoje {
+  margin: 0;
+  font-size: 15px;
+}
+
+.hoje::first-letter {
+  text-transform: uppercase;
+}
+
+.grelha {
+  display: grid;
+  gap: 20px;
+}
+
+/* ---------- Cartão de destaque (lima) ---------- */
+.destaque {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-radius: 20px;
+  background: var(--destaque);
+  color: var(--sobre-destaque);
+}
+
+.destaque-rotulo {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.destaque-nome {
+  font-size: 44px;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.destaque-texto {
+  margin: 0;
+  font-weight: 500;
+}
+
+.botao-escuro {
+  margin-top: 12px;
+  min-height: 52px;
+  border-color: #0B0B0C;
+  background: #0B0B0C;
+  color: #FFFFFF;
+}
+
+.boas-vindas {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border: 1px dashed var(--linha);
+  border-radius: 20px;
+}
+
+.boas-vindas p {
+  margin: 0;
+}
+
+/* ---------- Números da semana ---------- */
+.subtitulo {
+  font-size: 22px;
+}
+
+.semana,
+.ultimos {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.numeros {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.numero {
+  padding: 14px 12px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--linha);
+  border-radius: var(--raio);
+  background: var(--cartao);
+}
+
+.numero-valor {
+  font-family: var(--letra-titulo);
+  font-size: 28px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.numero-texto {
+  color: var(--texto-secundario);
+  font-size: 13px;
+}
+
+.ver-tudo {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Desktop: destaque e números lado a lado, últimos treinos por baixo */
+@media (min-width: 768px) {
+  .grelha {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ultimos {
+    grid-column: 1 / -1;
+  }
+}
