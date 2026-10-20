@@ -1,0 +1,25 @@
+.cabecalho {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  min-height: 68px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--fundo);
+}
+
+/* Desktop: o menu fica sempre visível, por isso o botão e o logo saem daqui */
+@media (min-width: 768px) {
+  .cabecalho {
+    padding: 12px 32px;
+    justify-content: flex-end;
+  }
+
+  .cabecalho-menu,
+  .cabecalho-logo {
+    display: none;
+  }
+}

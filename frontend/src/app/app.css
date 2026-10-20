@@ -1,0 +1,25 @@
+.app {
+  min-height: 100dvh;
+}
+
+.app-conteudo {
+  min-width: 0;
+}
+
+.pagina {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 4px 16px 32px;
+}
+
+/* Desktop: menu numa coluna fixa à esquerda, conteúdo à direita */
+@media (min-width: 768px) {
+  .app {
+    display: grid;
+    grid-template-columns: var(--largura-menu) minmax(0, 1fr);
+  }
+
+  .pagina {
+    padding: 4px 32px 48px;
+  }
+}

@@ -1,6 +1,12 @@
-<main>
-  <h1>{{ nome }}</h1>
-  <p>Diário de treinos em construção.</p>
-</main>
+<div class="app">
+  <app-menu-lateral [aberto]="menuAberto()" (fechar)="fecharMenu()" />
 
-<router-outlet />
+  <div class="app-conteudo">
+    <app-cabecalho [menuAberto]="menuAberto()" (abrirMenu)="abrirMenu()" />
+
+    <main class="pagina">
+      <!-- Aqui aparece a página da rota ativa (Início, Fichas, Histórico…) -->
+      <router-outlet />
+    </main>
+  </div>
+</div>
