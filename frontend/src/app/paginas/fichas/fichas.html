@@ -1,3 +1,38 @@
-<h1 class="pagina-titulo">Fichas de treino</h1>
-<p class="texto-secundario">Em construção: aqui vai aparecer a lista das tuas fichas.</p>
-<p><a routerLink="/fichas/nova">Criar nova ficha</a></p>
+<div class="cabecalho-pagina">
+  <h1 class="pagina-titulo">Fichas de treino</h1>
+  @if (fichas().length > 0) {
+    <a routerLink="/fichas/nova" class="botao botao-principal">+ Nova ficha</a>
+  }
+</div>
+
+<div class="lista-fichas">
+  @for (ficha of fichas(); track ficha.id) {
+    <!-- pai -> filho com [ficha]; filho -> pai com (comecar), (editar) e (apagar) -->
+    <app-ficha-card
+      [ficha]="ficha"
+      (comecar)="comecar($event)"
+      (editar)="editar($event)"
+      (apagar)="pedirParaApagar($event)"
+    />
+  } @empty {
+    <div class="vazio">
+      <h2>Ainda não tens fichas</h2>
+      <p class="texto-secundario">
+        Cria a tua primeira ficha ou começa com um plano Push · Pull · Legs de exemplo, que podes editar depois.
+      </p>
+      <a routerLink="/fichas/nova" class="botao botao-principal">Criar a primeira ficha</a>
+      <button type="button" class="botao" (click)="usarExemplos()">Usar fichas de exemplo</button>
+    </div>
+  }
+</div>
+
+<!-- Confirmação antes de apagar -->
+@if (paraApagar(); as ficha) {
+  <button type="button" class="painel-fundo" aria-label="Cancelar" (click)="cancelarApagar()"></button>
+  <section class="painel" role="alertdialog" aria-modal="true" aria-labelledby="titulo-apagar" aria-describedby="texto-apagar">
+    <h2 id="titulo-apagar">Apagar a ficha «{{ ficha.nome }}»?</h2>
+    <p id="texto-apagar" class="texto-secundario">Os treinos que já fizeste com ela continuam no histórico.</p>
+    <button type="button" class="botao botao-perigo" (click)="confirmarApagar()">Apagar</button>
+    <button type="button" class="botao" (click)="cancelarApagar()">Cancelar</button>
+  </section>
+}

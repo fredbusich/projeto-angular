@@ -1,2 +1,134 @@
-<h1 class="pagina-titulo">Nova ficha</h1>
-<p class="texto-secundario">Em construção: aqui vai ficar o formulário para criar e editar fichas.</p>
+<h1 class="pagina-titulo">{{ modoEdicao ? 'Editar ficha' : 'Nova ficha' }}</h1>
+
+@if (naoEncontrada) {
+  <p class="texto-erro">Esta ficha não existe (pode ter sido apagada).</p>
+  <a routerLink="/fichas" class="botao">Voltar às fichas</a>
+} @else {
+  <!-- [formGroup] liga o <form> ao FormGroup do TypeScript; (ngSubmit) corre ao submeter -->
+  <form class="formulario" [formGroup]="formulario" (ngSubmit)="guardar()" novalidate>
+
+    <!-- Nome -->
+    <div class="campo-grupo">
+      <label class="rotulo" for="nome-ficha">Nome da ficha</label>
+      <input
+        id="nome-ficha"
+        class="campo"
+        type="text"
+        formControlName="nome"
+        placeholder="Ex.: Push A"
+        maxlength="40"
+        autocomplete="off"
+        [attr.aria-invalid]="mostrarErro(formulario.controls.nome)"
+        aria-describedby="erro-nome"
+      />
+      @if (mostrarErro(formulario.controls.nome)) {
+        <p id="erro-nome" class="erro-campo">
+          @if (formulario.controls.nome.hasError('required')) {
+            O nome é obrigatório.
+          } @else if (formulario.controls.nome.hasError('soEspacos')) {
+            O nome não pode ter só espaços.
+          } @else if (formulario.controls.nome.hasError('minlength')) {
+            O nome precisa de pelo menos 3 letras.
+          }
+        </p>
+      }
+    </div>
+
+    <!-- Tipo de treino -->
+    <fieldset class="campo-grupo">
+      <legend class="rotulo">Tipo de treino</legend>
+      <div class="opcoes-tipo">
+        @for (tipo of tipos; track tipo) {
+          <label class="opcao-tipo">
+            <input type="radio" name="tipo" formControlName="tipo" [value]="tipo" />
+            <span>{{ nomesTipos[tipo] }}</span>
+          </label>
+        }
+      </div>
+      @if (mostrarErro(formulario.controls.tipo)) {
+        <p class="erro-campo">Escolhe o tipo de treino.</p>
+      }
+    </fieldset>
+
+    <!-- Exercícios (FormArray) -->
+    <section class="campo-grupo" aria-labelledby="titulo-exercicios">
+      <div class="linha-titulo">
+        <h2 id="titulo-exercicios" class="rotulo">Exercícios</h2>
+        <span class="texto-secundario">{{ exercicios.length | i18nPlural: plural }}</span>
+      </div>
+
+      <ol class="lista-exercicios" formArrayName="exercicios">
+        @for (grupo of exercicios.controls; track grupo; let i = $index, primeiro = $first, ultimo = $last) {
+          <li class="exercicio-ficha" [formGroupName]="i">
+            <div class="exercicio-topo">
+              <span class="numero">{{ i + 1 }}</span>
+              <div class="exercicio-nome">
+                <strong>{{ grupo.controls.nome.value }}</strong>
+                <span class="texto-secundario">{{ nomesGrupos[grupo.controls.grupo.value] }}</span>
+              </div>
+              <div class="exercicio-botoes">
+                <button type="button" class="botao-icone" [attr.aria-label]="'Subir ' + grupo.controls.nome.value" [disabled]="primeiro" (click)="mover(i, -1)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6" /></svg>
+                </button>
+                <button type="button" class="botao-icone" [attr.aria-label]="'Descer ' + grupo.controls.nome.value" [disabled]="ultimo" (click)="mover(i, 1)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
+                </button>
+                <button type="button" class="botao-icone" [attr.aria-label]="'Remover ' + grupo.controls.nome.value" (click)="remover(i)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="exercicio-campos">
+              <label class="campo-pequeno">
+                Séries
+                <input class="campo" type="number" inputmode="numeric" min="1" max="10" formControlName="series"
+                  [attr.aria-invalid]="mostrarErro(grupo.controls.series)" />
+              </label>
+              <label class="campo-pequeno">
+                Repetições
+                <input class="campo" type="number" inputmode="numeric" min="1" max="50" formControlName="repeticoes"
+                  [attr.aria-invalid]="mostrarErro(grupo.controls.repeticoes)" />
+              </label>
+            </div>
+            @if (mostrarErro(grupo.controls.series)) {
+              <p class="erro-campo">As séries têm de ser um número inteiro entre 1 e 10.</p>
+            }
+            @if (mostrarErro(grupo.controls.repeticoes)) {
+              <p class="erro-campo">As repetições têm de ser um número inteiro entre 1 e 50.</p>
+            }
+          </li>
+        }
+      </ol>
+
+      @if (exercicios.length === 0 && exercicios.touched) {
+        <p class="erro-campo">Adiciona pelo menos um exercício.</p>
+      }
+      <button type="button" class="botao botao-tracejado" (click)="abrirSeletor()">+ Adicionar exercício</button>
+    </section>
+
+    <!-- Ações -->
+    <div class="acoes">
+      @if (formulario.invalid) {
+        <p class="texto-secundario pendentes">Para guardar falta: {{ pendentes }}.</p>
+      }
+      <!-- [disabled]: enquanto o formulário for inválido, não se pode submeter -->
+      <button type="submit" class="botao botao-principal" [disabled]="formulario.invalid">
+        {{ modoEdicao ? 'Guardar alterações' : 'Guardar ficha' }}
+      </button>
+      <a routerLink="/fichas" class="botao">Cancelar</a>
+    </div>
+  </form>
+}
+
+<!-- Painel para escolher exercícios: reutiliza a mesma lista da página Exercícios -->
+@if (seletorAberto()) {
+  <button type="button" class="painel-fundo" aria-label="Fechar" (click)="fecharSeletor()"></button>
+  <section class="painel painel-grande" role="dialog" aria-modal="true" aria-labelledby="titulo-seletor">
+    <div class="linha-titulo">
+      <h2 id="titulo-seletor">Escolher exercícios</h2>
+      <button type="button" class="botao botao-principal" (click)="fecharSeletor()">Concluir</button>
+    </div>
+    <app-lista-exercicios [escolhidos]="idsEscolhidos()" (escolher)="adicionarExercicio($event)" />
+  </section>
+}
