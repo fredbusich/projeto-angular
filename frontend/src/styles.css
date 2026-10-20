@@ -131,6 +131,10 @@ textarea {
   color: var(--texto-secundario);
 }
 
+.texto-erro {
+  color: var(--erro);
+}
+
 /* Quem pede menos animação no sistema operativo não as vê */
 @media (prefers-reduced-motion: reduce) {
   * {

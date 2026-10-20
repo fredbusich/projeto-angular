@@ -167,8 +167,9 @@ O nome e o grupo do exercício ficam copiados dentro da ficha e do treino. Assim
 | `FichaService` | Criar, ler, editar e apagar fichas |
 | `TreinoService` | Guardar treinos, histórico, "anterior" de cada exercício e maior carga |
 | `TemaService` | Tema claro/escuro |
+| `ArmazenamentoService` | Ler e guardar no `localStorage` com métodos genéricos (`ler<T>`, `guardar<T>`); usado pelos três anteriores |
 
-Todos com `@Injectable({ providedIn: 'root' })` e injetados nos componentes pelo construtor, como nas aulas.
+Todos com `@Injectable({ providedIn: 'root' })` e injetados pelo construtor, como nas aulas. O Angular 22 gera os services com um decorador novo (`@Service()`), mas o enunciado pede `@Injectable`, por isso é esse que se usa.
 
 ## 8. Onde fica cada requisito do enunciado
 
@@ -200,8 +201,9 @@ projeto angular/
         ├── layout/          cabecalho, menu-lateral
         ├── paginas/         inicio, fichas, ficha-form, treino, historico, exercicios
         ├── componentes/     ficha-card, exercicio-card, serie-linha, temporizador-descanso
-        ├── servicos/        exercicio-service, ficha-service, treino-service, tema-service
-        ├── modelos/         interfaces da secção 6
+        ├── servicos/        exercicio-service, ficha-service, treino-service, tema-service, armazenamento-service
+        ├── modelos/         interfaces da secção 6 (exercicio, ficha, treino, wger)
+        ├── utils/           gerar-id
         └── pipes/           duracao
 ```
 
