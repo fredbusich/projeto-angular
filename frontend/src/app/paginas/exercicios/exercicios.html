@@ -1,2 +1,20 @@
 <h1 class="pagina-titulo">Exercícios</h1>
-<p class="texto-secundario">Em construção: aqui vai aparecer a biblioteca de exercícios, com pesquisa e filtros.</p>
+
+<!-- Lista provisória para testar o ExercicioService; o aspeto final chega no passo 5 -->
+@switch (estado()) {
+  @case ('a-carregar') {
+    <p class="texto-secundario">A carregar exercícios…</p>
+  }
+  @case ('erro') {
+    <p class="texto-erro">Não foi possível carregar os exercícios. Verifica a ligação à internet.</p>
+    <button type="button" (click)="carregar()">Tentar outra vez</button>
+  }
+  @case ('pronto') {
+    <p class="texto-secundario">{{ total() }} exercícios na API wger. A mostrar os primeiros {{ exercicios().length }}.</p>
+    <ul>
+      @for (exercicio of exercicios(); track exercicio.id) {
+        <li>{{ exercicio.nome }} · {{ nomesGrupos[exercicio.grupo] }}</li>
+      }
+    </ul>
+  }
+}

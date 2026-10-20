@@ -1,16 +1,20 @@
 import { Injectable, signal } from '@angular/core';
+import { ArmazenamentoService } from './armazenamento-service';
 
 export type Tema = 'escuro' | 'claro';
 
 // Guarda e aplica o tema (escuro ou claro) escolhido pelo utilizador.
 @Injectable({ providedIn: 'root' })
 export class TemaService {
-  private readonly chave = 'replog-tema';
+  private readonly chave = 'tema';
 
   // signal: quando muda, o Angular atualiza sozinho tudo o que o lê no HTML
-  readonly tema = signal<Tema>(this.lerTemaGuardado());
+  readonly tema = signal<Tema>('escuro');
 
-  constructor() {
+  constructor(private armazenamento: ArmazenamentoService) {
+    if (this.armazenamento.ler<Tema>(this.chave, 'escuro') === 'claro') {
+      this.tema.set('claro');
+    }
     this.aplicar(this.tema());
   }
 
@@ -18,19 +22,7 @@ export class TemaService {
     const novo: Tema = this.tema() === 'escuro' ? 'claro' : 'escuro';
     this.tema.set(novo);
     this.aplicar(novo);
-    try {
-      localStorage.setItem(this.chave, novo);
-    } catch {
-      // sem localStorage (ex.: navegação privada): o tema só não fica guardado
-    }
-  }
-
-  private lerTemaGuardado(): Tema {
-    try {
-      return localStorage.getItem(this.chave) === 'claro' ? 'claro' : 'escuro';
-    } catch {
-      return 'escuro';
-    }
+    this.armazenamento.guardar(this.chave, novo);
   }
 
   // Põe data-tema="..." no <html>; o styles.css troca as cores a partir daí
