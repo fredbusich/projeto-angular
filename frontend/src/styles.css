@@ -1,1 +1,139 @@
-/* Estilos globais da aplicação (cores, letras e tema): ficam para o passo "estrutura". */
+/* ==========================================================
+   Estilos globais: cores, letras e peças usadas em toda a app.
+   Mobile-first: estas regras são para o telemóvel; o desktop
+   acrescenta as suas em @media (min-width: 768px).
+   ========================================================== */
+
+/* ---------- Cores e medidas (tema escuro, por omissão) ---------- */
+:root {
+  --fundo: #0B0B0C;
+  --cartao: #161618;
+  --cartao-elevado: #202023;
+  --linha: #2C2C30;
+  --texto: #F4F4F5;
+  --texto-secundario: #A1A1AA;
+  --destaque: #C8F031;
+  --sobre-destaque: #0B0B0C;   /* texto em cima da cor de destaque */
+  --erro: #FF8A8A;
+  --foco: #C8F031;             /* contorno de foco do teclado */
+
+  --letra-titulo: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  --letra-texto: 'Barlow', system-ui, sans-serif;
+
+  --raio: 16px;
+  --raio-pequeno: 12px;
+  --toque: 44px;               /* tamanho mínimo de um botão para o dedo */
+  --largura-menu: 264px;
+
+  color-scheme: dark;
+}
+
+/* ---------- Tema claro: o TemaService põe data-tema="claro" no <html> ---------- */
+:root[data-tema='claro'] {
+  --fundo: #F2F2EF;
+  --cartao: #FFFFFF;
+  --cartao-elevado: #EAEAE6;
+  --linha: #D9D9D4;
+  --texto: #0B0B0C;
+  --texto-secundario: #55555C;
+  --erro: #B42318;
+  --foco: #0B0B0C;             /* o lima não se vê bem em fundo claro */
+
+  color-scheme: light;
+}
+
+/* ---------- Base ---------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--fundo);
+  color: var(--texto);
+  font-family: var(--letra-texto);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-family: var(--letra-titulo);
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+a {
+  color: inherit;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 3px solid var(--foco);
+  outline-offset: 2px;
+}
+
+/* ---------- Peças partilhadas ---------- */
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--letra-titulo);
+  font-weight: 700;
+  font-size: 24px;
+  letter-spacing: 0.06em;
+  text-decoration: none;
+}
+
+.logo-marca {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: var(--destaque);
+}
+
+.botao-icone {
+  width: var(--toque);
+  height: var(--toque);
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--linha);
+  border-radius: var(--raio-pequeno);
+  background: var(--cartao);
+  cursor: pointer;
+}
+
+.botao-icone svg {
+  width: 22px;
+  height: 22px;
+}
+
+.pagina-titulo {
+  font-size: 34px;
+  margin: 4px 0 8px;
+}
+
+.texto-secundario {
+  color: var(--texto-secundario);
+}
+
+/* Quem pede menos animação no sistema operativo não as vê */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}

@@ -1,0 +1,49 @@
+<!-- Fundo escuro por trás do menu (só no telemóvel): carregar nele fecha o menu -->
+@if (aberto) {
+  <button type="button" class="menu-fundo" aria-label="Fechar menu" (click)="fechar.emit()"></button>
+}
+
+<nav id="menu-lateral" class="menu" [class.aberto]="aberto" aria-label="Menu principal">
+  <div class="menu-topo">
+    <a routerLink="/" class="logo" (click)="fechar.emit()">
+      <span class="logo-marca"></span>
+      REPLOG
+    </a>
+    <button type="button" class="botao-icone menu-fechar" aria-label="Fechar menu" (click)="fechar.emit()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <path d="M6 6l12 12M18 6L6 18" />
+      </svg>
+    </button>
+  </div>
+
+  <ul class="menu-lista">
+    @for (item of itens; track item.rota) {
+      <li>
+        <a
+          class="menu-item"
+          [routerLink]="item.rota"
+          routerLinkActive="ativo"
+          ariaCurrentWhenActive="page"
+          [routerLinkActiveOptions]="{ exact: item.exato }"
+          (click)="fechar.emit()"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path [attr.d]="item.icone" />
+          </svg>
+          {{ item.rotulo }}
+        </a>
+      </li>
+    }
+
+    <!-- Progresso (gráficos e recordes) só chega na fase 2 -->
+    <li>
+      <span class="menu-item desativado" aria-disabled="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />
+        </svg>
+        Progresso
+        <span class="etiqueta">Fase 2</span>
+      </span>
+    </li>
+  </ul>
+</nav>
