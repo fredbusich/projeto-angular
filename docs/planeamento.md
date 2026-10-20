@@ -72,6 +72,7 @@ App
 ├── MenuLateral          lista de páginas (aberto/fechado)
 └── <router-outlet>
     ├── Inicio
+    │   └── TreinoCard           (versão curta)
     ├── Fichas
     │   └── FichaCard            (reutilizável)
     ├── FichaForm
@@ -81,6 +82,7 @@ App
     │   ├── SerieLinha           (reutilizável)
     │   └── TemporizadorDescanso
     ├── Historico
+    │   └── TreinoCard           (reutilizável: versão detalhada)
     └── Exercicios
         └── ListaExercicios      (reutilizável: a mesma do FichaForm)
             └── ExercicioCard    (reutilizável)
@@ -96,6 +98,7 @@ Comunicação pai → filho (`@Input`) e filho → pai (`@Output` + `EventEmitte
 | `ExercicioCard` | `exercicio`, `adicionado` | `adicionar` |
 | `SerieLinha` | `serie`, `anterior`, `atual` | `alterada`, `alternarFeita` |
 | `TemporizadorDescanso` | `inicio`, `duracao` | `terminou` |
+| `TreinoCard` | `treino`, `detalhado` | `apagar` |
 
 ## 6. Interfaces TypeScript
 
@@ -204,10 +207,10 @@ projeto angular/
         ├── app.ts / app.html / app.css / app.routes.ts / app.config.ts
         ├── layout/          cabecalho, menu-lateral
         ├── paginas/         inicio, fichas, ficha-form, treino, historico, exercicios
-        ├── componentes/     ficha-card, exercicio-card, lista-exercicios, serie-linha, temporizador-descanso
+        ├── componentes/     ficha-card, exercicio-card, lista-exercicios, serie-linha, temporizador-descanso, treino-card
         ├── servicos/        exercicio-service, ficha-service, treino-service, tema-service, armazenamento-service
         ├── modelos/         interfaces da secção 6 (exercicio, ficha, treino, wger)
-        ├── utils/           gerar-id, normalizar, validadores
+        ├── utils/           gerar-id, normalizar, validadores, datas
         └── pipes/           duracao
 ```
 

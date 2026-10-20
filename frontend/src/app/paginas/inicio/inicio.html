@@ -1,2 +1,69 @@
-<h1 class="pagina-titulo">Bom treino!</h1>
-<p class="texto-secundario">Em construção: aqui vão aparecer o próximo treino, os números da semana e os últimos treinos.</p>
+<!-- pipe date: "segunda-feira, 20 de outubro" -->
+<p class="hoje texto-secundario">{{ hoje | date: "EEEE, d 'de' MMMM" }}</p>
+<h1 class="pagina-titulo">{{ saudacao }}!</h1>
+
+<div class="grelha">
+  <!-- O cartão de destaque muda conforme o caso: treino a decorrer, próximo treino ou boas-vindas -->
+  @if (emCurso(); as treino) {
+    <section class="destaque" aria-labelledby="titulo-destaque">
+      <p class="destaque-rotulo">Treino a decorrer</p>
+      <h2 class="destaque-nome" id="titulo-destaque">{{ treino.nomeFicha }}</h2>
+      <p class="destaque-texto">
+        {{ seriesFeitas(treino) }} de {{ totalSeries(treino) }} séries feitas · começou às {{ treino.inicio | date: 'HH:mm' }}
+      </p>
+      <a class="botao botao-escuro" [routerLink]="['/treino', treino.fichaId]">Continuar treino</a>
+    </section>
+  } @else if (proxima(); as ficha) {
+    <section class="destaque" aria-labelledby="titulo-destaque">
+      <p class="destaque-rotulo">Próximo treino · {{ nomesTipos[ficha.tipo] }}</p>
+      <h2 class="destaque-nome" id="titulo-destaque">{{ ficha.nome }}</h2>
+      <p class="destaque-texto">{{ grupos(ficha) }}</p>
+      <p class="destaque-texto">{{ ficha.exercicios.length | i18nPlural: plural }} · {{ ultimaVez(ficha) }}</p>
+      <a class="botao botao-escuro" [routerLink]="['/treino', ficha.id]">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4l13 8-13 8z" /></svg>
+        Começar treino
+      </a>
+    </section>
+  } @else {
+    <section class="boas-vindas">
+      <h2>Bem-vindo ao RepLog</h2>
+      <p class="texto-secundario">
+        Cria as tuas fichas de treino (ou usa as de exemplo) e regista cada série no ginásio.
+        A app mostra-te sempre o que fizeste da última vez.
+      </p>
+      <a routerLink="/fichas" class="botao botao-principal">Criar fichas</a>
+    </section>
+  }
+
+  <section class="semana" aria-labelledby="titulo-semana">
+    <h2 id="titulo-semana" class="subtitulo">Esta semana</h2>
+    <div class="numeros">
+      <div class="numero">
+        <span class="numero-valor">{{ semana().treinos }}</span>
+        <span class="numero-texto">{{ semana().treinos | i18nPlural: pluralTreinos }}</span>
+      </div>
+      <div class="numero">
+        <span class="numero-valor">{{ semana().volume / 1000 | number: '1.0-1' }} t</span>
+        <span class="numero-texto">de volume</span>
+      </div>
+      <div class="numero">
+        <span class="numero-valor">{{ semana().segundos | duracao: 'curto' }}</span>
+        <span class="numero-texto">a treinar</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="ultimos" aria-labelledby="titulo-ultimos">
+    <div class="linha-titulo">
+      <h2 id="titulo-ultimos" class="subtitulo">Últimos treinos</h2>
+      @if (ultimos().length > 0) {
+        <a routerLink="/historico" class="ver-tudo">Ver tudo</a>
+      }
+    </div>
+    @for (treino of ultimos(); track treino.id) {
+      <app-treino-card [treino]="treino" />
+    } @empty {
+      <p class="texto-secundario">Ainda não terminaste nenhum treino.</p>
+    }
+  </section>
+</div>

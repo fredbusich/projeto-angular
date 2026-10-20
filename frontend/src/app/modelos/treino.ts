@@ -16,6 +16,14 @@ export interface ExercicioNoTreino {
   series: Serie[];
 }
 
+// Os números da semana (de segunda a domingo) para a página Início e o Histórico
+export interface ResumoSemana {
+  treinos: number;
+  volume: number;          // kg
+  segundos: number;        // tempo a treinar
+  dias: number[];          // dias com treino: 0 = segunda … 6 = domingo
+}
+
 export interface Treino {
   id: string;
   fichaId: string;

@@ -1,6 +1,7 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, computed, signal } from '@angular/core';
 import { Ficha } from '../modelos/ficha';
-import { Serie, Treino } from '../modelos/treino';
+import { ResumoSemana, Serie, Treino } from '../modelos/treino';
+import { inicioDaSemana } from '../utils/datas';
 import { gerarId } from '../utils/gerar-id';
 import { ArmazenamentoService } from './armazenamento-service';
 
@@ -108,6 +109,49 @@ export class TreinoService {
       .filter((serie) => serie.feita)
       .reduce((total, serie) => total + serie.carga * serie.repeticoes, 0);
   }
+
+  seriesFeitas(treino: Treino): number {
+    return treino.exercicios.flatMap((exercicio) => exercicio.series).filter((serie) => serie.feita).length;
+  }
+
+  // Duração em segundos (se ainda não terminou, conta até agora)
+  duracao(treino: Treino): number {
+    const fim = treino.fim ? Date.parse(treino.fim) : Date.now();
+    return Math.max(0, (fim - Date.parse(treino.inicio)) / 1000);
+  }
+
+  // O treino mais recente feito com esta ficha (o histórico está do mais recente para o mais antigo)
+  ultimoTreinoDaFicha(fichaId: string): Treino | undefined {
+    return this.historico().find((treino) => treino.fichaId === fichaId);
+  }
+
+  // Sugere a ficha a fazer a seguir: uma que nunca foi feita ou, se não houver,
+  // a que foi feita há mais tempo. Numa rotação Push · Pull · Legs dá a ordem certa.
+  sugerirProxima(fichas: Ficha[]): Ficha | undefined {
+    let sugestao: Ficha | undefined;
+    let maisAntiga = Infinity;
+    for (const ficha of fichas) {
+      const ultimo = this.ultimoTreinoDaFicha(ficha.id);
+      const quando = ultimo ? Date.parse(ultimo.inicio) : -Infinity; // nunca feita: vem primeiro
+      if (quando < maisAntiga) {
+        maisAntiga = quando;
+        sugestao = ficha;
+      }
+    }
+    return sugestao;
+  }
+
+  // computed: os números da semana recalculam-se sozinhos quando o histórico muda
+  readonly resumoDaSemana = computed<ResumoSemana>(() => {
+    const segunda = inicioDaSemana();
+    const daSemana = this.historico().filter((treino) => new Date(treino.inicio) >= segunda);
+    return {
+      treinos: daSemana.length,
+      volume: daSemana.reduce((total, treino) => total + this.volume(treino), 0),
+      segundos: daSemana.reduce((total, treino) => total + this.duracao(treino), 0),
+      dias: [...new Set(daSemana.map((treino) => (new Date(treino.inicio).getDay() + 6) % 7))],
+    };
+  });
 
   private definirEmCurso(treino: Treino | null): void {
     this.emCurso.set(treino);

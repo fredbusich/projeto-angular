@@ -1,0 +1,96 @@
+:host {
+  display: block;
+}
+
+.treino {
+  padding: 14px 16px;
+  border: 1px solid var(--linha);
+  border-radius: 20px;
+  background: var(--cartao);
+}
+
+.treino-nome {
+  font-size: 22px;
+  text-transform: uppercase;
+}
+
+.treino-data {
+  margin: 2px 0 0;
+  color: var(--texto-secundario);
+  font-size: 13px;
+}
+
+.treino-data::first-letter {
+  text-transform: uppercase;
+}
+
+/* ---------- Versão curta (Início) ---------- */
+.curto {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.curto-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.curto-volume {
+  margin: 0;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ---------- Versão detalhada (Histórico) ---------- */
+.detalhado {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.treino-topo {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.numeros {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.numeros dt {
+  color: var(--texto-secundario);
+  font-size: 12px;
+}
+
+.numeros dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.exercicios {
+  margin: 0;
+  padding: 10px 0 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-top: 1px solid var(--linha);
+  font-size: 14px;
+}
+
+.exercicios li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.melhor {
+  color: var(--texto-secundario);
+  white-space: nowrap;
+}

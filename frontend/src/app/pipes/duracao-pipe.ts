@@ -6,13 +6,22 @@ import { Pipe, PipeTransform } from '@angular/core';
 //   {{ 3480 | duracao: 'texto' }} -> "58 min"
 //   {{ 3900 | duracao: 'texto' }} -> "1 h 5 min"
 //   {{ 40 | duracao: 'texto' }}   -> "menos de 1 min"
+//   {{ 10440 | duracao: 'curto' }} -> "2,9 h"  (para caixas pequenas)
 @Pipe({ name: 'duracao' })
 export class DuracaoPipe implements PipeTransform {
-  transform(segundos: number | null | undefined, formato: 'relogio' | 'texto' = 'relogio'): string {
+  transform(segundos: number | null | undefined, formato: 'relogio' | 'texto' | 'curto' = 'relogio'): string {
     const total = Math.max(0, Math.round(segundos ?? 0));
     const horas = Math.floor(total / 3600);
     const minutos = Math.floor((total % 3600) / 60);
     const resto = total % 60;
+
+    if (formato === 'curto') {
+      if (total < 3600) {
+        return `${Math.round(total / 60)} min`;
+      }
+      const horasComDecimal = Math.round(total / 360) / 10; // 1 casa decimal: 2,9 / 3 (sem ",0")
+      return `${String(horasComDecimal).replace('.', ',')} h`;
+    }
 
     if (formato === 'texto') {
       if (total < 60) {

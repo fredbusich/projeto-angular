@@ -1,0 +1,43 @@
+@if (detalhado) {
+  <article class="treino detalhado">
+    <div class="treino-topo">
+      <div>
+        <h3 class="treino-nome">{{ treino.nomeFicha }}</h3>
+        <!-- pipe date: "segunda-feira, 20 out. · 18:40" -->
+        <p class="treino-data">{{ treino.inicio | date: "EEEE, d MMM '·' HH:mm" }}</p>
+      </div>
+      <button type="button" class="botao-icone" [attr.aria-label]="'Apagar o treino ' + treino.nomeFicha" (click)="apagar.emit(treino)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />
+        </svg>
+      </button>
+    </div>
+
+    <dl class="numeros">
+      <div><dt>Duração</dt><dd>{{ segundos | duracao: 'texto' }}</dd></div>
+      <div><dt>Volume</dt><dd>{{ volume | number: '1.0-1' }} kg</dd></div>
+      <div><dt>Séries</dt><dd>{{ seriesFeitas }}</dd></div>
+    </dl>
+
+    @if (exercicios.length > 0) {
+      <ul class="exercicios">
+        @for (exercicio of exercicios; track $index) {
+          <li>
+            <span>{{ exercicio.feitas }} × {{ exercicio.nome }}</span>
+            <span class="melhor">{{ exercicio.melhor.carga | number: '1.0-2' }} kg × {{ exercicio.melhor.repeticoes }}</span>
+          </li>
+        }
+      </ul>
+    } @else {
+      <p class="treino-data">Nenhuma série marcada como feita.</p>
+    }
+  </article>
+} @else {
+  <article class="treino curto">
+    <div class="curto-info">
+      <h3 class="treino-nome">{{ treino.nomeFicha }}</h3>
+      <p class="treino-data">{{ treino.inicio | date: "EEE, d MMM" }} · {{ segundos | duracao: 'texto' }}</p>
+    </div>
+    <p class="curto-volume">{{ volume | number: '1.0-0' }} kg</p>
+  </article>
+}

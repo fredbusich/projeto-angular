@@ -21,6 +21,12 @@ export const NOMES_GRUPOS: Record<GrupoMuscular, string> = {
   cardio: 'Cardio',
 };
 
+// "Peito · Ombros · Braços": os grupos de uma lista de exercícios, cada um só uma vez
+export function nomesDosGrupos(exercicios: { grupo: GrupoMuscular }[]): string {
+  const unicos = new Set(exercicios.map((e) => NOMES_GRUPOS[e.grupo]));
+  return [...unicos].join(' · ');
+}
+
 // Um exercício da biblioteca, já no formato da nossa app
 export interface Exercicio {
   id: number;              // id na API wger

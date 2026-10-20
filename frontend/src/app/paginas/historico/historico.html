@@ -1,2 +1,42 @@
 <h1 class="pagina-titulo">Histórico</h1>
-<p class="texto-secundario">Em construção: aqui vão aparecer os treinos que já fizeste.</p>
+
+<section class="semana" aria-labelledby="titulo-semana">
+  <div class="linha-titulo">
+    <h2 id="titulo-semana" class="semana-titulo">Esta semana</h2>
+    <span class="texto-secundario semana-datas">{{ dias()[0].data | date: 'd MMM' }} – {{ dias()[6].data | date: 'd MMM' }}</span>
+  </div>
+  <ol class="dias">
+    @for (dia of dias(); track $index) {
+      <li class="dia" [class.treinou]="dia.treinou" [class.hoje]="dia.hoje">
+        <span class="dia-nome">{{ dia.data | date: 'EEEEE' }}</span>
+        <span class="dia-numero">{{ dia.data | date: 'd' }}</span>
+        <span class="sr-only">{{ dia.treinou ? 'com treino' : 'sem treino' }}</span>
+      </li>
+    }
+  </ol>
+</section>
+
+@for (mes of meses(); track mes.chave) {
+  <section class="mes" [attr.aria-labelledby]="'mes-' + mes.chave">
+    <h2 class="mes-titulo" [id]="'mes-' + mes.chave">{{ mes.data | date: 'MMMM y' }}</h2>
+    @for (treino of mes.treinos; track treino.id) {
+      <!-- pai -> filho com [treino] e [detalhado]; filho -> pai com (apagar) -->
+      <app-treino-card [treino]="treino" [detalhado]="true" (apagar)="pedirParaApagar($event)" />
+    }
+  </section>
+} @empty {
+  <div class="vazio">
+    <p>Ainda não terminaste nenhum treino.</p>
+    <a routerLink="/fichas" class="botao botao-principal">Escolher uma ficha e treinar</a>
+  </div>
+}
+
+@if (paraApagar(); as treino) {
+  <button type="button" class="painel-fundo" aria-label="Cancelar" (click)="cancelarApagar()"></button>
+  <section class="painel" role="alertdialog" aria-modal="true" aria-labelledby="titulo-apagar">
+    <h2 id="titulo-apagar">Apagar este treino?</h2>
+    <p class="texto-secundario">«{{ treino.nomeFicha }}» de {{ treino.inicio | date: "d 'de' MMMM, HH:mm" }}. Não dá para desfazer.</p>
+    <button type="button" class="botao botao-perigo" (click)="confirmarApagar()">Apagar</button>
+    <button type="button" class="botao" (click)="cancelarApagar()">Cancelar</button>
+  </section>
+}
