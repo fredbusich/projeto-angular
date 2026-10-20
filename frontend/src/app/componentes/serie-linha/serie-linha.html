@@ -1,0 +1,41 @@
+<div class="serie" [class.feita]="serie.feita" [class.atual]="atual">
+  <span class="numero">{{ serie.numero }}</span>
+
+  <span class="anterior">
+    @if (anterior) {
+      {{ anterior.carga | number: '1.0-2' }} × {{ anterior.repeticoes }}
+    } @else {
+      —
+    }
+  </span>
+
+  <input
+    class="campo-serie"
+    type="text"
+    inputmode="decimal"
+    placeholder="0"
+    [value]="cargaTexto"
+    [attr.aria-label]="'Carga da série ' + serie.numero + ' em kg'"
+    (change)="mudarCarga($event)"
+  />
+  <input
+    class="campo-serie"
+    type="text"
+    inputmode="numeric"
+    [value]="serie.repeticoes"
+    [attr.aria-label]="'Repetições da série ' + serie.numero"
+    (change)="mudarRepeticoes($event)"
+  />
+
+  <button
+    type="button"
+    class="marcar"
+    [attr.aria-pressed]="serie.feita"
+    [attr.aria-label]="'Série ' + serie.numero + ' feita'"
+    (click)="alternarFeita.emit()"
+  >
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M5 12l5 5 9-10" />
+    </svg>
+  </button>
+</div>

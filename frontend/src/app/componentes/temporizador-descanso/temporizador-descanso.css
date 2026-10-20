@@ -1,0 +1,67 @@
+/* Fica preso ao fundo do ecrã enquanto o descanso decorre */
+.descanso {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 15;
+  padding: 14px 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-top: 1px solid var(--linha);
+  background: var(--cartao);
+}
+
+.descanso-topo {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.descanso-rotulo {
+  color: var(--texto-secundario);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.descanso-tempo {
+  font-family: var(--letra-titulo);
+  font-size: 34px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.barra {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--linha);
+}
+
+.barra-cheia {
+  height: 100%;
+  background: var(--destaque);
+  transition: width 0.25s linear;
+}
+
+.descanso-botoes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.botao-saltar {
+  border-color: var(--texto);
+  background: var(--texto);
+  color: var(--fundo);
+}
+
+/* Desktop: o temporizador fica só por cima da coluna do conteúdo, não do menu */
+@media (min-width: 768px) {
+  .descanso {
+    left: var(--largura-menu);
+  }
+}

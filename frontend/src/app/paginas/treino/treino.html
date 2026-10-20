@@ -1,2 +1,111 @@
-<h1 class="pagina-titulo">Treino em curso</h1>
-<p class="texto-secundario">Em construção: aqui vais registar a carga e as repetições de cada série.</p>
+@switch (estado()) {
+  @case ('ficha-inexistente') {
+    <h1 class="pagina-titulo">Treino</h1>
+    <p class="texto-erro">Esta ficha já não existe.</p>
+    <a routerLink="/fichas" class="botao">Ver as fichas</a>
+  }
+
+  @case ('outro-em-curso') {
+    <h1 class="pagina-titulo">Já tens um treino a decorrer</h1>
+    <p class="texto-secundario">
+      Começaste «{{ outroTreino?.nomeFicha }}» às {{ outroTreino?.inicio | date: 'HH:mm' }}.
+      Só pode haver um treino de cada vez.
+    </p>
+    <div class="acoes">
+      <button type="button" class="botao botao-principal" (click)="continuarOutro()">Continuar «{{ outroTreino?.nomeFicha }}»</button>
+      <button type="button" class="botao" (click)="descartarOutro()">Descartar esse e começar este</button>
+    </div>
+  }
+
+  @case ('a-decorrer') {
+    @if (treino(); as t) {
+      <div class="pagina-treino" [class.com-descanso]="descansoInicio() !== null">
+        <div class="treino-topo">
+          <div>
+            <h1 class="pagina-titulo">{{ t.nomeFicha }}</h1>
+            <p class="texto-secundario cronometro">{{ segundosDecorridos() | duracao }} a treinar</p>
+          </div>
+          <button type="button" class="botao botao-principal" (click)="pedirConfirmacao('terminar')">Terminar</button>
+        </div>
+
+        <div class="progresso">
+          <div class="progresso-texto texto-secundario">
+            <span>{{ seriesFeitas() }} de {{ todasAsSeries().length }} séries feitas</span>
+            <span>{{ volume() | number: '1.0-1' }} kg de volume</span>
+          </div>
+          <div class="barra" aria-hidden="true"><div class="barra-cheia" [style.width.%]="percentagem()"></div></div>
+        </div>
+
+        @for (exercicio of t.exercicios; track exercicio.exercicioId; let e = $index) {
+          <section class="exercicio-treino" [attr.aria-labelledby]="'exercicio-' + e">
+            <h2 class="exercicio-nome" [id]="'exercicio-' + e">{{ exercicio.nome }}</h2>
+            <div class="etiquetas">
+              <span class="etiqueta">{{ nomesGrupos[exercicio.grupo] }}</span>
+              @if (recordes[exercicio.exercicioId] > 0) {
+                <span class="etiqueta">Recorde: {{ recordes[exercicio.exercicioId] | number: '1.0-2' }} kg</span>
+              }
+            </div>
+
+            <div class="tabela-cabecalho" aria-hidden="true">
+              <span>Série</span><span>Anterior</span><span>Kg</span><span>Reps</span><span class="centro">Feita</span>
+            </div>
+
+            @for (serie of exercicio.series; track serie.numero; let s = $index) {
+              <!-- pai -> filho: [serie], [anterior], [atual]; filho -> pai: (alterada), (alternarFeita) -->
+              <app-serie-linha
+                [serie]="serie"
+                [anterior]="anteriores[exercicio.exercicioId][s]"
+                [atual]="proxima() === e + '-' + s"
+                (alterada)="alterarSerie(e, s, $event)"
+                (alternarFeita)="alternarFeita(e, s)"
+              />
+            }
+
+            <div class="botoes-series">
+              <button type="button" class="botao botao-tracejado" (click)="adicionarSerie(e)">+ Série</button>
+              <button type="button" class="botao botao-tracejado" [disabled]="exercicio.series.length === 1" (click)="removerSerie(e)">− Série</button>
+            </div>
+
+            <input
+              class="campo notas"
+              type="text"
+              placeholder="Notas (ex.: pegada média, descer devagar)"
+              [attr.aria-label]="'Notas de ' + exercicio.nome"
+              [value]="exercicio.notas ?? ''"
+              (change)="alterarNotas(e, $event)"
+            />
+          </section>
+        }
+
+        <button type="button" class="botao cancelar" (click)="pedirConfirmacao('cancelar')">Cancelar treino</button>
+      </div>
+
+      <!-- O temporizador só existe enquanto há descanso; ao desaparecer, o ngOnDestroy dele para o setInterval -->
+      @if (descansoInicio(); as inicio) {
+        <app-temporizador-descanso [inicio]="inicio" [duracao]="segundosDescanso" (terminou)="fimDoDescanso()" />
+      }
+
+      @if (confirmacao(); as tipo) {
+        <button type="button" class="painel-fundo" aria-label="Voltar ao treino" (click)="fecharConfirmacao()"></button>
+        <section class="painel" role="alertdialog" aria-modal="true" aria-labelledby="titulo-confirmacao">
+          @switch (tipo) {
+            @case ('terminar') {
+              <h2 id="titulo-confirmacao">Terminar o treino?</h2>
+              <p class="texto-secundario">
+                {{ seriesFeitas() }} de {{ todasAsSeries().length }} séries feitas em {{ segundosDecorridos() | duracao: 'texto' }}.
+                @if (seriesFeitas() < todasAsSeries().length) { As séries por fazer não contam. }
+              </p>
+              <button type="button" class="botao botao-principal" (click)="terminar()">Terminar e guardar</button>
+            }
+            @case ('cancelar') {
+              <h2 id="titulo-confirmacao">Cancelar o treino?</h2>
+              <p class="texto-secundario">Nada deste treino fica guardado.</p>
+              <button type="button" class="botao botao-perigo" (click)="cancelar()">Cancelar treino</button>
+            }
+          }
+          <button type="button" class="botao" (click)="fecharConfirmacao()">Continuar a treinar</button>
+        </section>
+      }
+    }
+  }
+}

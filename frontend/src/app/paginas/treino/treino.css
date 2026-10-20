@@ -1,0 +1,124 @@
+.pagina-treino {
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Espaço por baixo para o temporizador (fixo no fundo) não tapar a última série */
+.pagina-treino.com-descanso {
+  padding-bottom: 170px;
+}
+
+.treino-topo {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.treino-topo .pagina-titulo {
+  margin: 0;
+}
+
+.cronometro {
+  margin: 2px 0 0;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.progresso {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.progresso-texto {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.barra {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--cartao-elevado);
+}
+
+.barra-cheia {
+  height: 100%;
+  background: var(--destaque);
+  transition: width 0.3s ease;
+}
+
+.exercicio-treino {
+  padding: 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid var(--linha);
+  border-radius: 20px;
+  background: var(--cartao);
+}
+
+.exercicio-nome {
+  font-size: 24px;
+}
+
+.etiquetas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.etiqueta {
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: var(--cartao-elevado);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* As mesmas colunas do SerieLinha */
+.tabela-cabecalho {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) 68px 56px 44px;
+  gap: 8px;
+  padding: 0 4px;
+  color: var(--texto-secundario);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.centro {
+  text-align: center;
+}
+
+.botoes-series {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.notas {
+  min-height: var(--toque);
+  font-size: 15px;
+}
+
+.cancelar {
+  align-self: center;
+  border-color: transparent;
+  background: transparent;
+  color: var(--texto-secundario);
+}
+
+.acoes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 420px;
+}
