@@ -1,0 +1,74 @@
+<div class="filtros">
+  <input
+    type="search"
+    class="campo"
+    placeholder="Pesquisar exercício ou equipamento…"
+    aria-label="Pesquisar exercício ou equipamento"
+    [(ngModel)]="pesquisa"
+  />
+
+  <div class="chips" role="group" aria-label="Filtrar por grupo muscular">
+    <button type="button" class="chip" [attr.aria-pressed]="grupo() === null" (click)="escolherGrupo(null)">Todos</button>
+    @for (g of grupos; track g) {
+      <button type="button" class="chip" [attr.aria-pressed]="grupo() === g" (click)="escolherGrupo(g)">
+        {{ nomesGrupos[g] }}
+      </button>
+    }
+  </div>
+</div>
+
+@switch (estado()) {
+  @case ('a-carregar') {
+    <p class="texto-secundario" role="status">A carregar exercícios…</p>
+  }
+
+  @case ('erro') {
+    <div class="mensagem" role="alert">
+      <p class="texto-erro">Não foi possível carregar os exercícios. Verifica a ligação à internet.</p>
+      <button type="button" class="botao" (click)="carregar()">Tentar outra vez</button>
+    </div>
+  }
+
+  @case ('pronto') {
+    <p class="texto-secundario contagem">
+      @if (pesquisa().trim()) {
+        {{ visiveis().length }} de {{ exercicios().length }} carregados
+      } @else {
+        {{ exercicios().length }} de {{ total() | number }} exercícios
+      }
+    </p>
+
+    <ul class="lista">
+      @for (exercicio of visiveis(); track exercicio.id) {
+        <li>
+          <!-- pai -> filho com [exercicio] e [adicionado]; filho -> pai com (adicionar) -->
+          <app-exercicio-card
+            [exercicio]="exercicio"
+            [adicionado]="escolhidos.includes(exercicio.id)"
+            (adicionar)="escolher.emit($event)"
+          />
+        </li>
+      } @empty {
+        <li class="texto-secundario">
+          Nenhum exercício encontrado nos que estão carregados.
+          @if (haMais()) { Experimenta carregar mais ou escolher um grupo muscular. }
+        </li>
+      }
+    </ul>
+
+    @if (haMais()) {
+      <div class="mais">
+        @if (erroAoCarregarMais()) {
+          <p class="texto-erro" role="alert">Não foi possível carregar mais exercícios.</p>
+        }
+        <button type="button" class="botao" [disabled]="aCarregarMais()" (click)="carregarMais()">
+          {{ aCarregarMais() ? 'A carregar…' : 'Carregar mais' }}
+        </button>
+      </div>
+    }
+
+    <p class="creditos texto-secundario">
+      Exercícios e imagens: <a href="https://wger.de" target="_blank" rel="noopener">wger.de</a> (licenças CC BY-SA).
+    </p>
+  }
+}

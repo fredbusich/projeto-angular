@@ -75,12 +75,15 @@ App
     ├── Fichas
     │   └── FichaCard            (reutilizável)
     ├── FichaForm
+    │   └── ListaExercicios      (para escolher exercícios)
+    │       └── ExercicioCard
     ├── Treino
     │   ├── SerieLinha           (reutilizável)
     │   └── TemporizadorDescanso
     ├── Historico
     └── Exercicios
-        └── ExercicioCard        (reutilizável)
+        └── ListaExercicios      (reutilizável: a mesma do FichaForm)
+            └── ExercicioCard    (reutilizável)
 ```
 
 Comunicação pai → filho (`@Input`) e filho → pai (`@Output` + `EventEmitter`):
@@ -89,7 +92,8 @@ Comunicação pai → filho (`@Input`) e filho → pai (`@Output` + `EventEmitte
 |---|---|---|
 | `MenuLateral` | `aberto` | `fechar` |
 | `FichaCard` | `ficha` | `comecar`, `editar`, `apagar` |
-| `ExercicioCard` | `exercicio` | `adicionar` |
+| `ListaExercicios` | `escolhidos` | `escolher` |
+| `ExercicioCard` | `exercicio`, `adicionado` | `adicionar` |
 | `SerieLinha` | `serie`, `anterior` | `alterada`, `feita` |
 | `TemporizadorDescanso` | `segundos` | `terminou` |
 
@@ -200,10 +204,10 @@ projeto angular/
         ├── app.ts / app.html / app.css / app.routes.ts / app.config.ts
         ├── layout/          cabecalho, menu-lateral
         ├── paginas/         inicio, fichas, ficha-form, treino, historico, exercicios
-        ├── componentes/     ficha-card, exercicio-card, serie-linha, temporizador-descanso
+        ├── componentes/     ficha-card, exercicio-card, lista-exercicios, serie-linha, temporizador-descanso
         ├── servicos/        exercicio-service, ficha-service, treino-service, tema-service, armazenamento-service
         ├── modelos/         interfaces da secção 6 (exercicio, ficha, treino, wger)
-        ├── utils/           gerar-id
+        ├── utils/           gerar-id, normalizar, validadores
         └── pipes/           duracao
 ```
 

@@ -11,14 +11,22 @@
     <p class="exercicio-detalhe">{{ detalhe }}</p>
   </div>
 
-  <button
-    type="button"
-    class="botao-icone"
-    [attr.aria-label]="'Adicionar ' + exercicio.nome + ' a uma ficha'"
-    (click)="adicionar.emit(exercicio)"
-  >
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
-      <path d="M12 5v14M5 12h14" />
-    </svg>
-  </button>
+  @if (adicionado) {
+    <button type="button" class="botao-icone adicionado" disabled [attr.aria-label]="exercicio.nome + ' já foi adicionado'">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M5 12l5 5 9-10" />
+      </svg>
+    </button>
+  } @else {
+    <button
+      type="button"
+      class="botao-icone"
+      [attr.aria-label]="'Adicionar ' + exercicio.nome"
+      (click)="adicionar.emit(exercicio)"
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+        <path d="M12 5v14M5 12h14" />
+      </svg>
+    </button>
+  }
 </article>

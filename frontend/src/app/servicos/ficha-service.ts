@@ -1,5 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import { DadosFicha, Ficha } from '../modelos/ficha';
+import { FICHAS_EXEMPLO } from '../modelos/fichas-exemplo';
 import { gerarId } from '../utils/gerar-id';
 import { ArmazenamentoService } from './armazenamento-service';
 
@@ -32,6 +33,13 @@ export class FichaService {
 
   apagar(id: string): void {
     this.gravar(this.lista().filter((ficha) => ficha.id !== id));
+  }
+
+  // Cria as fichas Push, Pull e Legs de exemplo
+  criarExemplos(): void {
+    const agora = new Date().toISOString();
+    const exemplos = FICHAS_EXEMPLO.map((dados) => ({ ...dados, id: gerarId(), criadaEm: agora }));
+    this.gravar([...this.lista(), ...exemplos]);
   }
 
   private gravar(fichas: Ficha[]): void {

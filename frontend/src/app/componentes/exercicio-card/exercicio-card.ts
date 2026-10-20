@@ -12,6 +12,9 @@ export class ExercicioCard {
   // pai -> filho: o exercício a mostrar (obrigatório)
   @Input({ required: true }) exercicio!: Exercicio;
 
+  // pai -> filho: true quando o exercício já foi escolhido (o botão mostra ✓)
+  @Input() adicionado = false;
+
   // filho -> pai: o utilizador quer adicionar este exercício a uma ficha
   @Output() adicionar = new EventEmitter<Exercicio>();
 

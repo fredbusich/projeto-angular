@@ -1,0 +1,24 @@
+<article class="ficha">
+  <div class="ficha-topo">
+    <span class="ficha-tipo">{{ nomesTipos[ficha.tipo] }}</span>
+    <!-- pipe date: "20 out. 2026", com as regras de Portugal -->
+    <span class="texto-secundario ficha-data">Criada a {{ ficha.criadaEm | date: 'd MMM y' }}</span>
+  </div>
+
+  <h2 class="ficha-nome">{{ ficha.nome }}</h2>
+  <p class="texto-secundario ficha-detalhe">{{ ficha.exercicios.length | i18nPlural: plural }} · {{ grupos }}</p>
+  <p class="ficha-resumo">{{ resumo }}</p>
+
+  <div class="ficha-acoes">
+    <button type="button" class="botao botao-principal" (click)="comecar.emit(ficha)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4l13 8-13 8z" /></svg>
+      Começar
+    </button>
+    <button type="button" class="botao" (click)="editar.emit(ficha)">Editar</button>
+    <button type="button" class="botao-icone" [attr.aria-label]="'Apagar a ficha ' + ficha.nome" (click)="apagar.emit(ficha)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />
+      </svg>
+    </button>
+  </div>
+</article>

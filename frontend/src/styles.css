@@ -157,9 +157,42 @@ textarea {
   color: var(--sobre-destaque);
 }
 
+.botao-perigo {
+  border-color: var(--erro);
+  background: var(--erro);
+  color: var(--fundo);
+}
+
+.botao-tracejado {
+  border-style: dashed;
+  background: transparent;
+}
+
 .botao:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* ---------- Título da página com um botão ao lado ---------- */
+.cabecalho-pagina {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.cabecalho-pagina .pagina-titulo {
+  margin: 0;
+}
+
+/* Título pequeno com um texto à direita ("Exercícios · 3 exercícios") */
+.linha-titulo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 /* ---------- Chips (filtros) ---------- */
@@ -203,6 +236,22 @@ textarea {
   color: var(--texto-secundario);
 }
 
+.campo[aria-invalid='true'] {
+  border: 2px solid var(--erro);
+}
+
+.rotulo {
+  font-family: var(--letra-texto);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.erro-campo {
+  margin: 0;
+  color: var(--erro);
+  font-size: 14px;
+}
+
 /* ---------- Painel que sobe do fundo do ecrã (escolhas rápidas) ---------- */
 .painel-fundo {
   position: fixed;
@@ -235,6 +284,12 @@ textarea {
   margin: 0;
 }
 
+/* Painel quase do tamanho do ecrã, para listas compridas */
+.painel-grande {
+  height: 92dvh;
+  max-height: none;
+}
+
 @media (min-width: 768px) {
   .painel {
     right: auto;
@@ -244,6 +299,11 @@ textarea {
     width: 420px;
     border-radius: 20px;
     transform: translate(-50%, -50%);
+  }
+
+  .painel-grande {
+    width: min(760px, 90vw);
+    height: 85dvh;
   }
 }
 

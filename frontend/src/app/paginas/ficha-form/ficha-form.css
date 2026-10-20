@@ -1,0 +1,146 @@
+.formulario {
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.campo-grupo {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.campo-grupo h2 {
+  margin: 0;
+}
+
+/* ---------- Tipo de treino: botões de rádio com aspeto de chip ---------- */
+.opcoes-tipo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.opcao-tipo input {
+  /* o rádio verdadeiro fica invisível, mas continua a funcionar com o teclado */
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+
+.opcao-tipo span {
+  min-height: 40px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--linha);
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.opcao-tipo input:checked + span {
+  border-color: var(--destaque);
+  background: var(--destaque);
+  color: var(--sobre-destaque);
+}
+
+.opcao-tipo input:focus-visible + span {
+  outline: 3px solid var(--foco);
+  outline-offset: 2px;
+}
+
+/* ---------- Lista de exercícios da ficha ---------- */
+.lista-exercicios {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.exercicio-ficha {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border: 1px solid var(--linha);
+  border-radius: var(--raio);
+  background: var(--cartao);
+}
+
+.exercicio-topo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.numero {
+  width: 28px;
+  flex-shrink: 0;
+  font-family: var(--letra-titulo);
+  font-size: 22px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.exercicio-nome {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  font-size: 15px;
+}
+
+.exercicio-nome .texto-secundario {
+  font-size: 13px;
+}
+
+.exercicio-botoes {
+  display: flex;
+  gap: 4px;
+}
+
+.exercicio-botoes .botao-icone:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.exercicio-campos {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.campo-pequeno {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--texto-secundario);
+  font-size: 13px;
+}
+
+.campo-pequeno .campo {
+  color: var(--texto);
+  text-align: center;
+  font-weight: 600;
+}
+
+/* ---------- Botões do fim ---------- */
+.acoes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pendentes {
+  margin: 0;
+  font-size: 14px;
+}
