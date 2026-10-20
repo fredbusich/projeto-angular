@@ -1,0 +1,52 @@
+:host {
+  display: block;
+}
+
+.exercicio {
+  min-height: 84px;
+  padding: 10px 10px 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--linha);
+  border-radius: var(--raio);
+  background: var(--cartao);
+}
+
+.exercicio-imagem {
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+  border-radius: var(--raio-pequeno);
+  /* as imagens da wger são desenhos em fundo branco */
+  background: #FFFFFF;
+  object-fit: contain;
+}
+
+.sem-imagem {
+  display: grid;
+  place-items: center;
+  background: var(--cartao-elevado);
+  color: var(--texto-secundario);
+  font-family: var(--letra-titulo);
+  font-weight: 700;
+  font-size: 20px;
+}
+
+.exercicio-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.exercicio-nome {
+  font-family: var(--letra-texto);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.exercicio-detalhe {
+  margin: 2px 0 0;
+  color: var(--texto-secundario);
+  font-size: 14px;
+}
