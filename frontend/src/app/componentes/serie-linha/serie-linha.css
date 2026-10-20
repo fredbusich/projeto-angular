@@ -1,0 +1,75 @@
+:host {
+  display: block;
+}
+
+/* As colunas têm de bater certo com o cabeçalho da tabela na página do treino */
+.serie {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) 68px 56px 44px;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 4px;
+  border-radius: var(--raio-pequeno);
+}
+
+.serie.feita {
+  background: var(--cartao-elevado);
+}
+
+.serie.atual {
+  outline: 1px solid var(--destaque);
+}
+
+.numero {
+  font-family: var(--letra-titulo);
+  font-size: 20px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.anterior {
+  color: var(--texto-secundario);
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.campo-serie {
+  width: 100%;
+  height: var(--toque);
+  border: 1px solid var(--linha);
+  border-radius: 10px;
+  background: var(--fundo);
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.campo-serie::placeholder {
+  color: var(--texto-secundario);
+}
+
+.marcar {
+  width: var(--toque);
+  height: var(--toque);
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--linha);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--texto-secundario);
+  cursor: pointer;
+}
+
+.marcar svg {
+  width: 22px;
+  height: 22px;
+}
+
+.marcar[aria-pressed='true'] {
+  border-color: var(--destaque);
+  background: var(--destaque);
+  color: var(--sobre-destaque);
+}

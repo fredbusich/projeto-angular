@@ -94,8 +94,8 @@ Comunicação pai → filho (`@Input`) e filho → pai (`@Output` + `EventEmitte
 | `FichaCard` | `ficha` | `comecar`, `editar`, `apagar` |
 | `ListaExercicios` | `escolhidos` | `escolher` |
 | `ExercicioCard` | `exercicio`, `adicionado` | `adicionar` |
-| `SerieLinha` | `serie`, `anterior` | `alterada`, `feita` |
-| `TemporizadorDescanso` | `segundos` | `terminou` |
+| `SerieLinha` | `serie`, `anterior`, `atual` | `alterada`, `alternarFeita` |
+| `TemporizadorDescanso` | `inicio`, `duracao` | `terminou` |
 
 ## 6. Interfaces TypeScript
 

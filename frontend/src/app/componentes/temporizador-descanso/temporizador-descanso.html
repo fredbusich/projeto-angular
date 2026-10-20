@@ -1,0 +1,16 @@
+<section class="descanso" aria-label="Temporizador de descanso">
+  <div class="descanso-topo">
+    <span class="descanso-rotulo">Descanso</span>
+    <span class="descanso-tempo" role="timer">{{ restante() | duracao }}</span>
+  </div>
+
+  <div class="barra" aria-hidden="true">
+    <div class="barra-cheia" [style.width.%]="percentagem()"></div>
+  </div>
+
+  <div class="descanso-botoes">
+    <button type="button" class="botao" aria-label="Menos 15 segundos" (click)="ajustar(-15)">−15 s</button>
+    <button type="button" class="botao" aria-label="Mais 15 segundos" (click)="ajustar(15)">+15 s</button>
+    <button type="button" class="botao botao-saltar" (click)="saltar()">Saltar</button>
+  </div>
+</section>
