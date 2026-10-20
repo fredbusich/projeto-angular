@@ -16,6 +16,22 @@
     </button>
   </div>
 
+  @if (treinoEmCurso(); as treino) {
+    <a
+      class="em-curso"
+      [routerLink]="['/treino', treino.fichaId]"
+      routerLinkActive="ativo"
+      ariaCurrentWhenActive="page"
+      (click)="fechar.emit()"
+    >
+      <span class="em-curso-ponto" aria-hidden="true"></span>
+      <span class="em-curso-texto">
+        <span class="em-curso-rotulo">Treino a decorrer</span>
+        <strong>{{ treino.nomeFicha }}</strong>
+      </span>
+    </a>
+  }
+
   <ul class="menu-lista">
     @for (item of itens; track item.rota) {
       <li>

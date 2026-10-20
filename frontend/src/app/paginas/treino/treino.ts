@@ -4,6 +4,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { SerieLinha } from '../../componentes/serie-linha/serie-linha';
 import { TemporizadorDescanso } from '../../componentes/temporizador-descanso/temporizador-descanso';
+import { Painel } from '../../diretivas/painel';
 import { NOMES_GRUPOS } from '../../modelos/exercicio';
 // "as TreinoDados": a interface chama-se Treino, tal como esta página; o alias evita a confusão
 import { Serie, Treino as TreinoDados } from '../../modelos/treino';
@@ -15,7 +16,7 @@ type EstadoPagina = 'a-decorrer' | 'outro-em-curso' | 'ficha-inexistente';
 type Confirmacao = 'terminar' | 'cancelar';
 
 @Component({
-  imports: [RouterLink, DatePipe, DecimalPipe, DuracaoPipe, SerieLinha, TemporizadorDescanso],
+  imports: [RouterLink, DatePipe, DecimalPipe, DuracaoPipe, SerieLinha, TemporizadorDescanso, Painel],
   selector: 'app-treino',
   styleUrl: './treino.css',
   templateUrl: './treino.html',

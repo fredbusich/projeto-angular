@@ -33,7 +33,7 @@
 
 @if (paraApagar(); as treino) {
   <button type="button" class="painel-fundo" aria-label="Cancelar" (click)="cancelarApagar()"></button>
-  <section class="painel" role="alertdialog" aria-modal="true" aria-labelledby="titulo-apagar">
+  <section class="painel" appPainel role="alertdialog" aria-modal="true" aria-labelledby="titulo-apagar">
     <h2 id="titulo-apagar">Apagar este treino?</h2>
     <p class="texto-secundario">«{{ treino.nomeFicha }}» de {{ treino.inicio | date: "d 'de' MMMM, HH:mm" }}. Não dá para desfazer.</p>
     <button type="button" class="botao botao-perigo" (click)="confirmarApagar()">Apagar</button>

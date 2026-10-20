@@ -180,20 +180,30 @@ Todos com `@Injectable({ providedIn: 'root' })` e injetados pelo construtor, com
 
 ## 8. Onde fica cada requisito do enunciado
 
-| # | Requisito | Onde |
+Tabela atualizada no fim da fase 1, com os ficheiros onde está cada coisa (útil para a apresentação).
+
+| # | Requisito | Onde (ficheiros em `frontend/src/app/`) |
 |---|---|---|
-| 1 | Componentização | Estrutura da secção 5 |
-| 2 | `{{ }}`, `[ ]`, `( )` | Em todas as páginas |
-| 2 | `[( )]` two-way | Pesquisa de exercícios (`ngModel`) |
-| 2 | `@if` / `@for` | Listas de fichas, séries, histórico; mensagens de lista vazia |
-| 2 | `@switch` | Estado do pedido (a carregar / erro / vazio / pronto) e grupo muscular |
-| 2 | Pipes | `date` (histórico), `number` (cargas e volume), e um pipe nosso `duracao` |
-| 3 | `@Input` / `@Output` | `FichaCard`, `ExercicioCard`, `SerieLinha`, `MenuLateral`, `TemporizadorDescanso` |
-| 4 | Service, DI, interfaces | Secções 6 e 7 |
-| 5 | HttpClient, `Observable`, `subscribe()`, carregamento e erro | `ExercicioService` + página Exercícios |
-| 6 | Router (3+ vistas), `router-outlet`, `routerLink` | Secção 4 (7 vistas) |
-| 7 | Reactive Forms com validação | `FichaForm`: nome obrigatório (mín. 3 letras), tipo obrigatório, pelo menos 1 exercício, séries e repetições acima de 0 |
-| 8 | `OnInit` / `OnDestroy` | `ngOnInit` carrega dados; `ngOnDestroy` para os temporizadores |
+| 1 | Componentização | 9 páginas e componentes de página + 7 componentes reutilizáveis (secção 5) |
+| 2 | `{{ }}` interpolação | Em todos os templates (ex.: `ficha-card.html`: `{{ ficha.nome }}`) |
+| 2 | `[ ]` property binding | `[routerLink]`, `[disabled]`, `[class.ativo]`, `[attr.aria-expanded]`, `[style.width.%]` (barras de progresso) |
+| 2 | `( )` event binding | `(click)`, `(change)` nas séries, `(ngSubmit)` no formulário |
+| 2 | `[( )]` two-way | Pesquisa de exercícios: `[(ngModel)]="pesquisa"` em `lista-exercicios.html` |
+| 2 | `@if` / `@for` | Em quase todas as páginas; `@for … @empty` nas listas vazias (fichas, histórico, exercícios) |
+| 2 | `@switch` | Estado do pedido HTTP (`lista-exercicios.html`), estado da página e confirmação (`treino.html`) |
+| 2 | Pipes nativos | `date` (Início, Histórico, cartões), `number` (kg e volume), `i18nPlural` ("1 exercício / 2 exercícios"), em português (`LOCALE_ID 'pt-PT'`) |
+| 2 | Pipe nosso | `pipes/duracao-pipe.ts`: "1:24", "58 min", "2,9 h" |
+| 3 | `@Input` / `@Output` + `EventEmitter` | `ExercicioCard`, `FichaCard`, `SerieLinha`, `TreinoCard`, `TemporizadorDescanso`, `ListaExercicios`, `MenuLateral`, `Cabecalho` |
+| 4 | Service com `@Injectable` e DI | 5 services em `servicos/`, injetados pelo construtor |
+| 4 | Interfaces TypeScript | `modelos/` (`Exercicio`, `Ficha`, `Treino`, `Serie`, `RespostaPaginada<T>`…) |
+| 5 | HttpClient + `Observable` + `subscribe()` | `servicos/exercicio-service.ts` (pedido e `map`) + `componentes/lista-exercicios` (subscribe, a carregar / erro / tentar outra vez) |
+| 6 | Router: 3+ vistas, `router-outlet`, `routerLink` | `app.routes.ts` (7 vistas + `**`), `app.html`, menu lateral |
+| 7 | Reactive Forms com validação | `paginas/ficha-form`: `FormGroup`, `FormControl`, `FormArray`, `Validators` + validadores nossos (`utils/validadores.ts`), erros por campo, botão bloqueado |
+| 8 | `OnInit` | `ListaExercicios`, `FichaForm` (lê o `:id`), `Treino` (lê o `:fichaId`), `TemporizadorDescanso` |
+| 8 | `OnDestroy` | `TemporizadorDescanso` e `Treino` (param os `setInterval`), `ListaExercicios` (cancela o pedido), `Exercicios`, diretiva `Painel` |
+| 8 | Organização | Pastas por responsabilidade (secção 9); acesso a dados só nos services |
+
+Extras (não pedidos): `ngOnChanges` no temporizador, `computed` e `signal`, diretiva `appPainel` (foco e teclado nos painéis), tema claro/escuro, "Adicionar ao ecrã principal" (manifesto e ícones), treino guardado a cada série (sobrevive a recarregar a página).
 
 ## 9. Estrutura de pastas
 
@@ -210,6 +220,7 @@ projeto angular/
         ├── componentes/     ficha-card, exercicio-card, lista-exercicios, serie-linha, temporizador-descanso, treino-card
         ├── servicos/        exercicio-service, ficha-service, treino-service, tema-service, armazenamento-service
         ├── modelos/         interfaces da secção 6 (exercicio, ficha, treino, wger)
+        ├── diretivas/       painel
         ├── utils/           gerar-id, normalizar, validadores, datas
         └── pipes/           duracao
 ```

@@ -1,5 +1,7 @@
-import { Component, EventEmitter, HostListener, Input, Output } from '@angular/core';
+import { Component, EventEmitter, HostListener, Input, Output, Signal } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
+import { Treino } from '../../modelos/treino';
+import { TreinoService } from '../../servicos/treino-service';
 
 interface ItemMenu {
   rotulo: string;
@@ -27,6 +29,13 @@ export class MenuLateral {
     { rotulo: 'Histórico', rota: '/historico', exato: false, icone: 'M12 7v5l3 2M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0' },
     { rotulo: 'Exercícios', rota: '/exercicios', exato: false, icone: 'M6 7v10M3 9v6M18 7v10M21 9v6M6 12h12' },
   ];
+
+  // Quando há um treino a decorrer, o menu mostra um atalho para voltar a ele
+  protected readonly treinoEmCurso: Signal<Treino | null>;
+
+  constructor(treinoService: TreinoService) {
+    this.treinoEmCurso = treinoService.treinoEmCurso;
+  }
 
   // A tecla Esc também fecha o menu
   @HostListener('document:keydown.escape')

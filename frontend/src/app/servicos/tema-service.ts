@@ -25,8 +25,12 @@ export class TemaService {
     this.armazenamento.guardar(this.chave, novo);
   }
 
-  // Põe data-tema="..." no <html>; o styles.css troca as cores a partir daí
+  // Põe data-tema="..." no <html>; o styles.css troca as cores a partir daí.
+  // Também muda a cor da barra do telemóvel (meta theme-color) para acompanhar o fundo.
   private aplicar(tema: Tema): void {
     document.documentElement.dataset['tema'] = tema;
+    document
+      .querySelector('meta[name="theme-color"]')
+      ?.setAttribute('content', tema === 'claro' ? '#F2F2EF' : '#0B0B0C');
   }
 }

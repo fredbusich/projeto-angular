@@ -3,6 +3,7 @@ import { Component, HostListener, OnInit, signal } from '@angular/core';
 import { AbstractControl, FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ListaExercicios } from '../../componentes/lista-exercicios/lista-exercicios';
+import { Painel } from '../../diretivas/painel';
 import { Exercicio, GrupoMuscular, NOMES_GRUPOS } from '../../modelos/exercicio';
 import { DadosFicha, ExercicioNaFicha, NOMES_TIPOS, TipoFicha } from '../../modelos/ficha';
 import { FichaService } from '../../servicos/ficha-service';
@@ -19,7 +20,7 @@ type GrupoExercicio = FormGroup<{
 
 // Formulário para criar (/fichas/nova) e editar (/fichas/:id/editar) uma ficha.
 @Component({
-  imports: [ReactiveFormsModule, RouterLink, I18nPluralPipe, ListaExercicios],
+  imports: [ReactiveFormsModule, RouterLink, I18nPluralPipe, ListaExercicios, Painel],
   selector: 'app-ficha-form',
   styleUrl: './ficha-form.css',
   templateUrl: './ficha-form.html',

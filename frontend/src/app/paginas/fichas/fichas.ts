@@ -1,11 +1,12 @@
 import { Component, HostListener, Signal, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { FichaCard } from '../../componentes/ficha-card/ficha-card';
+import { Painel } from '../../diretivas/painel';
 import { Ficha } from '../../modelos/ficha';
 import { FichaService } from '../../servicos/ficha-service';
 
 @Component({
-  imports: [RouterLink, FichaCard],
+  imports: [RouterLink, FichaCard, Painel],
   selector: 'app-fichas',
   styleUrl: './fichas.css',
   templateUrl: './fichas.html',

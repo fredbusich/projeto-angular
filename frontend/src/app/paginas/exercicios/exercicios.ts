@@ -2,12 +2,13 @@ import { I18nPluralPipe } from '@angular/common';
 import { Component, HostListener, OnDestroy, Signal, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ListaExercicios } from '../../componentes/lista-exercicios/lista-exercicios';
+import { Painel } from '../../diretivas/painel';
 import { Exercicio } from '../../modelos/exercicio';
 import { Ficha } from '../../modelos/ficha';
 import { FichaService } from '../../servicos/ficha-service';
 
 @Component({
-  imports: [RouterLink, I18nPluralPipe, ListaExercicios],
+  imports: [RouterLink, I18nPluralPipe, ListaExercicios, Painel],
   selector: 'app-exercicios',
   styleUrl: './exercicios.css',
   templateUrl: './exercicios.html',

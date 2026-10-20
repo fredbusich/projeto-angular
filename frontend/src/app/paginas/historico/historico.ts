@@ -2,6 +2,7 @@ import { DatePipe } from '@angular/common';
 import { Component, HostListener, Signal, computed, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TreinoCard } from '../../componentes/treino-card/treino-card';
+import { Painel } from '../../diretivas/painel';
 import { Treino } from '../../modelos/treino';
 import { TreinoService } from '../../servicos/treino-service';
 import { inicioDaSemana } from '../../utils/datas';
@@ -19,7 +20,7 @@ interface GrupoDoMes {
 }
 
 @Component({
-  imports: [RouterLink, DatePipe, TreinoCard],
+  imports: [RouterLink, DatePipe, TreinoCard, Painel],
   selector: 'app-historico',
   styleUrl: './historico.css',
   templateUrl: './historico.html',
