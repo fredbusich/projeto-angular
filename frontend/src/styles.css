@@ -14,6 +14,7 @@
   --texto-secundario: #A1A1AA;
   --destaque: #C8F031;
   --sobre-destaque: #0B0B0C;   /* texto em cima da cor de destaque */
+  --destaque-linha: #C8F031;   /* linhas e barras finas na cor de destaque */
   --erro: #FF8A8A;
   --foco: #C8F031;             /* contorno de foco do teclado */
 
@@ -38,6 +39,7 @@
   --texto-secundario: #55555C;
   --erro: #B42318;
   --foco: #0B0B0C;             /* o lima não se vê bem em fundo claro */
+  --destaque-linha: #5F7D00;   /* lima mais escuro: linhas finas visíveis no fundo claro */
 
   color-scheme: light;
 }
@@ -282,6 +284,11 @@ textarea {
 .painel h2,
 .painel p {
   margin: 0;
+}
+
+/* O foco vai para o painel quando abre (diretiva appPainel); o contorno ali não ajuda */
+.painel:focus {
+  outline: none;
 }
 
 /* Painel quase do tamanho do ecrã, para listas compridas */

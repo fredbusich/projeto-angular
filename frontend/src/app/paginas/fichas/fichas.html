@@ -29,7 +29,7 @@
 <!-- Confirmação antes de apagar -->
 @if (paraApagar(); as ficha) {
   <button type="button" class="painel-fundo" aria-label="Cancelar" (click)="cancelarApagar()"></button>
-  <section class="painel" role="alertdialog" aria-modal="true" aria-labelledby="titulo-apagar" aria-describedby="texto-apagar">
+  <section class="painel" appPainel role="alertdialog" aria-modal="true" aria-labelledby="titulo-apagar" aria-describedby="texto-apagar">
     <h2 id="titulo-apagar">Apagar a ficha «{{ ficha.nome }}»?</h2>
     <p id="texto-apagar" class="texto-secundario">Os treinos que já fizeste com ela continuam no histórico.</p>
     <button type="button" class="botao botao-perigo" (click)="confirmarApagar()">Apagar</button>

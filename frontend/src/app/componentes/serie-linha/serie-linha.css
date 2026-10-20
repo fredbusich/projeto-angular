@@ -17,7 +17,7 @@
 }
 
 .serie.atual {
-  outline: 1px solid var(--destaque);
+  outline: 2px solid var(--destaque-linha);
 }
 
 .numero {

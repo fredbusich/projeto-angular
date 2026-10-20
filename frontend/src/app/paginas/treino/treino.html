@@ -87,7 +87,7 @@
 
       @if (confirmacao(); as tipo) {
         <button type="button" class="painel-fundo" aria-label="Voltar ao treino" (click)="fecharConfirmacao()"></button>
-        <section class="painel" role="alertdialog" aria-modal="true" aria-labelledby="titulo-confirmacao">
+        <section class="painel" appPainel role="alertdialog" aria-modal="true" aria-labelledby="titulo-confirmacao">
           @switch (tipo) {
             @case ('terminar') {
               <h2 id="titulo-confirmacao">Terminar o treino?</h2>

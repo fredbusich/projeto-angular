@@ -49,7 +49,7 @@
 
 .barra-cheia {
   height: 100%;
-  background: var(--destaque);
+  background: var(--destaque-linha);
   transition: width 0.3s ease;
 }
 
