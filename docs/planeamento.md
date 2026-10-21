@@ -201,7 +201,7 @@ Tabela atualizada no fim da fase 1, com os ficheiros onde está cada coisa (úti
 
 | # | Requisito | Onde (ficheiros em `frontend/src/app/`) |
 |---|---|---|
-| 1 | Componentização | 9 páginas e componentes de página + 7 componentes reutilizáveis (secção 5) |
+| 1 | Componentização | 6 páginas (7 rotas), 8 componentes reutilizáveis e 2 de layout (secção 5) |
 | 2 | `{{ }}` interpolação | Em todos os templates (ex.: `ficha-card.html`: `{{ ficha.nome }}`) |
 | 2 | `[ ]` property binding | `[routerLink]`, `[disabled]`, `[class.ativo]`, `[attr.aria-expanded]`, `[style.width.%]` (barras de progresso) |
 | 2 | `( )` event binding | `(click)`, `(change)` nas séries, `(ngSubmit)` no formulário |
@@ -260,11 +260,18 @@ projeto angular/
 | 7 | `treino` | Treino em curso, `SerieLinha`, temporizador de descanso |
 | 8 | `inicio-historico` | Início e Histórico, pipes |
 | 9 | `acabamento` | Tema claro/escuro, versão desktop, acessibilidade, testes |
-| 10 | `publicacao` | Publicar no GitHub Pages e README final |
+| — | `melhorias` | Depois de testar a app: ExerciseDB, PT/EN, pesquisa em português, treino vazio, alterar exercícios a meio do treino, recordes, discos, partilha, modo sem rede |
+| 10 | `publicacao` | Publicar no GitHub Pages (GitHub Actions) e README final |
 
 ## 11. Entrega (do enunciado)
 
 - [x] Repositório público no GitHub
-- [ ] Aplicação publicada com link público, a navegar entre páginas
-- [ ] README com descrição, funcionalidades, link da app, instruções para correr localmente e API usada
-- [ ] Código organizado em componentes, serviços e interfaces
+- [ ] Aplicação publicada com link público, a navegar entre páginas (fica feita com o merge do passo 10 e o GitHub Pages ligado)
+- [x] README com descrição, funcionalidades, link da app, instruções para correr localmente e API usada
+- [x] Código organizado em componentes, serviços e interfaces
+
+## 12. Publicação
+
+- `.github/workflows/publicar.yml`: a cada push para a `main`, o GitHub Actions instala as dependências (`npm ci`), constrói a app (`npm run build:pages`, que faz `ng build --base-href /projeto-angular/`) e publica a pasta `dist/frontend/browser` no GitHub Pages.
+- `base-href /projeto-angular/`: a app fica em `https://fredbusich.github.io/projeto-angular/`, não na raiz do domínio.
+- `404.html` (cópia do `index.html`): o GitHub Pages não conhece as rotas do Angular; ao abrir ou recarregar `/projeto-angular/treino/livre` responde com o 404.html, que arranca a app, e o Router mostra a página certa.
