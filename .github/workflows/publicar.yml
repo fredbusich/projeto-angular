@@ -1,0 +1,63 @@
+# Publica a app no GitHub Pages sempre que há alterações na main
+# (também se pode correr à mão no separador Actions do repositório).
+name: Publicar no GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# O GitHub Pages precisa destas permissões para publicar
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Uma publicação de cada vez (se houver dois pushes seguidos, a mais recente ganha)
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  construir:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Instalar as dependências
+        run: npm ci
+
+      # A app fica em https://fredbusich.github.io/projeto-angular/, por isso o base-href é /projeto-angular/
+      # (o script "build:pages" do package.json faz ng build --base-href /projeto-angular/)
+      - name: Construir a versão de produção
+        run: npm run build:pages
+
+      # O GitHub Pages não conhece as rotas do Angular: ao abrir (ou recarregar) /projeto-angular/treino/livre
+      # dava 404. Com uma cópia do index.html como 404.html, quem responde é a app, e o Router mostra a página certa.
+      - name: Página 404 que abre a app
+        run: cp dist/frontend/browser/index.html dist/frontend/browser/404.html
+
+      - uses: actions/configure-pages@v6
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: frontend/dist/frontend/browser
+
+  publicar:
+    needs: construir
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.publicacao.outputs.page_url }}
+    steps:
+      - id: publicacao
+        uses: actions/deploy-pages@v5
