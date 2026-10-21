@@ -20,8 +20,13 @@
   <section class="mes" [attr.aria-labelledby]="'mes-' + mes.chave">
     <h2 class="mes-titulo" [id]="'mes-' + mes.chave">{{ mes.data | date: 'MMMM y' }}</h2>
     @for (treino of mes.treinos; track treino.id) {
-      <!-- pai -> filho com [treino] e [detalhado]; filho -> pai com (apagar) -->
-      <app-treino-card [treino]="treino" [detalhado]="true" (apagar)="pedirParaApagar($event)" />
+      <!-- pai -> filho com [treino] e [detalhado]; filho -> pai com (apagar) e (partilhar) -->
+      <app-treino-card
+        [treino]="treino"
+        [detalhado]="true"
+        (apagar)="pedirParaApagar($event)"
+        (partilhar)="partilhar($event)"
+      />
     }
   </section>
 } @empty {

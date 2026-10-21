@@ -13,7 +13,7 @@ export const NOMES_TIPOS: Record<TipoFicha, string> = {
 
 // Um exercício dentro de uma ficha: o que se planeia fazer
 export interface ExercicioNaFicha {
-  exercicioId: number;
+  exercicioId: string;
   nome: string;
   grupo: GrupoMuscular;
   series: number;          // séries planeadas

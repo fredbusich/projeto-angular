@@ -62,23 +62,14 @@
           <li class="exercicio-ficha" [formGroupName]="i">
             <div class="exercicio-topo">
               <span class="numero">{{ i + 1 }}</span>
+              <img class="miniatura" [src]="imagem(grupo.controls.exercicioId.value)" alt="" width="48" height="48" loading="lazy" (error)="miniatura.classList.add('falhou')" #miniatura />
               <div class="exercicio-nome">
-                <strong>{{ grupo.controls.nome.value }}</strong>
+                <strong>{{ grupo.controls.nome.value | nomeExercicio }}</strong>
                 <span class="texto-secundario">{{ nomesGrupos[grupo.controls.grupo.value] }}</span>
-              </div>
-              <div class="exercicio-botoes">
-                <button type="button" class="botao-icone" [attr.aria-label]="'Subir ' + grupo.controls.nome.value" [disabled]="primeiro" (click)="mover(i, -1)">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6" /></svg>
-                </button>
-                <button type="button" class="botao-icone" [attr.aria-label]="'Descer ' + grupo.controls.nome.value" [disabled]="ultimo" (click)="mover(i, 1)">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
-                </button>
-                <button type="button" class="botao-icone" [attr.aria-label]="'Remover ' + grupo.controls.nome.value" (click)="remover(i)">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
-                </button>
               </div>
             </div>
 
+            <!-- Séries, repetições e os botões na mesma linha: o nome fica com a largura toda por cima -->
             <div class="exercicio-campos">
               <label class="campo-pequeno">
                 Séries
@@ -90,6 +81,17 @@
                 <input class="campo" type="number" inputmode="numeric" min="1" max="50" formControlName="repeticoes"
                   [attr.aria-invalid]="mostrarErro(grupo.controls.repeticoes)" />
               </label>
+              <div class="exercicio-botoes">
+                <button type="button" class="botao-icone" [attr.aria-label]="'Subir ' + (grupo.controls.nome.value | nomeExercicio)" [disabled]="primeiro" (click)="mover(i, -1)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6" /></svg>
+                </button>
+                <button type="button" class="botao-icone" [attr.aria-label]="'Descer ' + (grupo.controls.nome.value | nomeExercicio)" [disabled]="ultimo" (click)="mover(i, 1)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
+                </button>
+                <button type="button" class="botao-icone" [attr.aria-label]="'Remover ' + (grupo.controls.nome.value | nomeExercicio)" (click)="remover(i)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+                </button>
+              </div>
             </div>
             @if (mostrarErro(grupo.controls.series)) {
               <p class="erro-campo">As séries têm de ser um número inteiro entre 1 e 10.</p>

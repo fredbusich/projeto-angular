@@ -1,0 +1,41 @@
+<div class="calculadora">
+  <label class="rotulo-total">
+    Carga total (kg)
+    <input class="campo" type="text" inputmode="decimal" placeholder="Ex.: 80" [value]="cargaTexto" (input)="mudarTotal($event)" />
+  </label>
+
+  <div class="chips" role="group" aria-label="Peso da barra">
+    @for (b of barras; track b) {
+      <button type="button" class="chip" [attr.aria-pressed]="pesoBarra() === b" (click)="pesoBarra.set(b)">
+        {{ b === 0 ? 'Máquina (sem barra)' : 'Barra de ' + b + ' kg' }}
+      </button>
+    }
+  </div>
+
+  <!-- Desenho de meia barra: os discos de um lado, do maior (junto ao centro) para o menor -->
+  <div class="desenho" aria-hidden="true">
+    <span class="colar"></span>
+    @for (disco of montagem().porLado; track $index) {
+      <span class="disco" [attr.data-kg]="disco">{{ disco | number: '1.0-2' }}</span>
+    }
+    <span class="manga"></span>
+  </div>
+
+  <p class="resultado" role="status">
+    @if (total() === 0) {
+      Escreve a carga total.
+    } @else if (montagem().porLado.length === 0) {
+      Sem discos: {{ total() <= pesoBarra() ? 'só a barra (ou menos).' : 'os discos mais pequenos são de 1,25 kg.' }}
+    } @else {
+      Em cada lado:
+      @for (disco of montagem().porLado; track $index; let ultimo = $last) {
+        <strong>{{ disco | number: '1.0-2' }}</strong>{{ ultimo ? ' kg' : ' + ' }}
+      }
+    }
+  </p>
+  @if (montagem().falta > 0 && montagem().porLado.length > 0) {
+    <p class="aviso-conta">
+      Com estes discos não dá {{ total() | number: '1.0-2' }} kg certos: ficas com {{ cargaPossivel | number: '1.0-2' }} kg.
+    </p>
+  }
+</div>

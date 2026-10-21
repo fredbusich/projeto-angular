@@ -4,7 +4,7 @@ import { RouterLink } from '@angular/router';
 import { TreinoCard } from '../../componentes/treino-card/treino-card';
 import { nomesDosGrupos } from '../../modelos/exercicio';
 import { Ficha, NOMES_TIPOS } from '../../modelos/ficha';
-import { ResumoSemana, Treino } from '../../modelos/treino';
+import { ResumoSemana, TREINO_LIVRE, Treino } from '../../modelos/treino';
 import { DuracaoPipe } from '../../pipes/duracao-pipe';
 import { FichaService } from '../../servicos/ficha-service';
 import { TreinoService } from '../../servicos/treino-service';
@@ -20,6 +20,7 @@ export class Inicio {
   protected readonly hoje = new Date();
   protected readonly saudacao = this.escolherSaudacao(this.hoje.getHours());
   protected readonly nomesTipos = NOMES_TIPOS;
+  protected readonly treinoLivre = TREINO_LIVRE;
   protected readonly plural = { '=1': '# exercício', other: '# exercícios' };
   protected readonly pluralTreinos = { '=1': 'treino', other: 'treinos' };
 

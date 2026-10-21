@@ -129,6 +129,41 @@ textarea {
   margin: 4px 0 8px;
 }
 
+/* Texto só para leitores de ecrã (não aparece, mas é lido) */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Troféu dos recordes */
+.trofeu {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  vertical-align: -2px;
+  color: var(--destaque-linha);
+}
+
+/* Miniatura da animação de um exercício (na ficha e no treino) */
+.miniatura {
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  border-radius: var(--raio-pequeno);
+  /* as animações da ExerciseDB têm fundo branco */
+  background: #FFFFFF;
+  object-fit: contain;
+}
+
+/* A imagem não carregou (sem rede): fica só o espaço, sem o ícone de imagem partida */
+.miniatura.falhou {
+  visibility: hidden;
+}
+
 .texto-secundario {
   color: var(--texto-secundario);
 }

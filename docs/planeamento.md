@@ -10,7 +10,7 @@ Nome provisório: **RepLog**.
 |---|---|---|
 | Foco | Angular e TypeScript: a interface | Back-end e base de dados |
 | Pasta | `frontend/` | `backend/` |
-| Dados | API pública wger + `localStorage` | Base de dados (a definir com o professor) |
+| Dados | API pública ExerciseDB + `localStorage` | Base de dados (a definir com o professor) |
 | Ideias | Fichas, treino em curso, histórico, exercícios | Login, recordes, gráficos de progresso, relatórios |
 
 O repositório é o mesmo nas duas fases. Todo o acesso a dados fica nos **Services**: na fase 2 troca-se o `localStorage` pela base de dados sem mexer nos componentes.
@@ -40,16 +40,25 @@ O repositório é o mesmo nas duas fases. Todo o acesso a dados fica nos **Servi
 
 | Dados | Onde estão | Como se obtêm |
 |---|---|---|
-| Biblioteca de exercícios | API pública **wger** (`https://wger.de/api/v2/`) | `HttpClient`, num Service, com estados de carregamento e erro |
+| Biblioteca de exercícios | API pública **ExerciseDB**, versão gratuita da AscendAPI (`https://oss.exercisedb.dev/api/v1/`) | `HttpClient`, num Service, com estados de carregamento e erro |
+| Nomes dos exercícios em português | Ficheiro da própria app: `public/dados/nomes-exercicios-pt.json` (1 285 traduções) | `HttpClient` no `TraducaoService`, carregado uma vez ao arrancar a app (`provideAppInitializer`) |
 | Fichas de treino | `localStorage` do navegador | `FichaService` |
 | Treinos feitos (histórico) | `localStorage` do navegador | `TreinoService` |
 | Tema claro/escuro | `localStorage` do navegador | `TemaService` |
+| A app, os exercícios já vistos e as imagens (para funcionar sem rede) | Cache do service worker do Angular | `ngsw-config.json`: a app e as traduções ficam logo guardadas; as respostas da API (7 dias) e as imagens (90 dias) ficam guardadas à medida que se veem. Só na versão publicada (`ng build`), não no `ng serve` |
+| Língua dos nomes (PT/EN) | `localStorage` do navegador | `TraducaoService` |
 
-Notas sobre a wger (verificadas a 19/10/2026):
-- É gratuita, não precisa de chave e aceita pedidos de qualquer site (CORS aberto).
-- Tem 932 exercícios, todos com nome em inglês e só cerca de 66 com nome em português. A app mostra o nome em português quando existe e, se não, o nome em inglês.
-- As categorias vêm em inglês (Chest, Back, Legs…). A app traduz para português (Peito, Costas, Pernas…).
-- Endpoint principal: `exerciseinfo/?category=<id>&limit=<n>`. Cada exercício traz bastante informação, por isso os pedidos são feitos por categoria e em páginas, nunca todos de uma vez.
+Notas sobre a ExerciseDB (verificadas a 20/10/2026):
+- 1 500 exercícios, **todos com uma animação** (GIF de 180 px: pessoa em branco com o músculo trabalhado a vermelho), o mesmo estilo de imagem que apps como o Hevy usam.
+- Gratuita, sem chave e aceita pedidos de qualquer site (CORS aberto). Condições: uso pessoal/educativo e não comercial, **com crédito à AscendAPI** (está no fim da lista de exercícios), e limites de pedidos apertados.
+- Endpoint usado: `exercises?limit=25&name=…&bodyParts=…&after=…`. Pesquisa por nome **na API** (em todos os exercícios), filtro por parte do corpo e paginação por marcador (`after`, com o `nextCursor` da resposta anterior). Máximo de 25 por pedido.
+- A pesquisa só é enviada 400 ms depois de se parar de escrever (`debounceTime` do RxJS), para não fazer um pedido por cada letra.
+- Na API os nomes só existem em inglês. A app tem a tradução para português de Portugal de todos os nomes (ficheiro JSON acima) e um botão **PT/EN** no cabeçalho para escolher a língua. Os nomes guardam-se sempre em inglês (como vêm da API); a tradução é feita só no ecrã, com o pipe `nomeExercicio`. As partes do corpo e os equipamentos também são traduzidos (Peito, Costas, Halteres, Polia…). A app junta partes do corpo nos grupos dela (ex.: Braços = "upper arms" + "lower arms").
+- A pesquisa da API só funciona em inglês, é aproximada e depende da ordem das palavras ("incline bench press" encontra, "bench press incline" não). Por isso `utils/pesquisa.ts` usa as traduções: procura os exercícios cujo nome, em português ou em inglês, tem todas as palavras escritas (aceita plurais, masculino/feminino e palavras escritas a meio) e envia à API a expressão inglesa que esses exercícios têm em comum. O equipamento vai à parte, no filtro `equipments` ("crucifixos com halteres" → `name=fly` + `equipments=dumbbell`). Uma pequena lista de sinónimos cobre palavras que as traduções não usam (rosca → curl, voador → crucifixo, stiff, levantamento terra…). Pesquisas em inglês, ou com as duas línguas misturadas, também funcionam.
+- A pesquisa por nome da API é aproximada e junta muitos exercícios só parecidos ("remada unilateral" devolve 137, dos quais 18 têm as duas palavras). Por isso, numa pesquisa, a app pede até 3 páginas seguidas (`expand` do RxJS) e mostra só os exercícios com todas as palavras; "Carregar mais" continua a procura. Ordena-os por relevância (primeiro os que têm a frase escrita) e tira os repetidos com o mesmo nome.
+- **Limite da API: 10 pedidos em cada 10 segundos** (depois responde 429). Daí o máximo de 3 páginas por pesquisa e a memória de respostas no `ExercicioService`: reabrir a lista ou repetir uma pesquisa não faz pedidos novos.
+- As fichas e os treinos só guardam o id do exercício; a imagem vem do endereço das animações (`static.exercisedb.dev/media/<id>.gif`, função `imagemDoExercicio`).
+- Antes da ExerciseDB, a app usava a API **wger** (passos 4 a 9). Foi trocada nas melhorias porque só 224 dos 932 exercícios tinham uma imagem útil e não pesquisava por nome.
 
 ## 4. Páginas (rotas)
 
@@ -59,16 +68,17 @@ Notas sobre a wger (verificadas a 19/10/2026):
 | `fichas` | Fichas | Lista de fichas com "Começar" e "Editar" |
 | `fichas/nova` | Formulário de ficha | Criar ficha (formulário reativo) |
 | `fichas/:id/editar` | Formulário de ficha | Editar ficha (o mesmo componente) |
-| `treino/:fichaId` | Treino em curso | Registar séries, ver o "anterior", temporizador de descanso |
+| `treino/:fichaId` | Treino em curso | Registar séries, ver o "anterior", temporizador de descanso; acrescentar, substituir, mudar a ordem e remover exercícios durante o treino (só nesse treino: a ficha fica igual) |
+| `treino/livre` | Treino em curso | A mesma rota, com `fichaId = 'livre'`: começa vazio ("Começar treino vazio", no Início): os exercícios escolhem-se durante o treino |
 | `historico` | Histórico | Treinos feitos, com duração e volume |
-| `exercicios` | Exercícios | Biblioteca da wger, com pesquisa e filtro por grupo muscular |
+| `exercicios` | Exercícios | Biblioteca da ExerciseDB, com pesquisa e filtro por grupo muscular |
 | `**` | — | Volta ao Início |
 
 ## 5. Componentes
 
 ```
 App
-├── Cabecalho            botão de menu, nome da app, botão de tema
+├── Cabecalho            botão de menu, nome da app, botões de língua (PT/EN) e de tema
 ├── MenuLateral          lista de páginas (aberto/fechado)
 └── <router-outlet>
     ├── Inicio
@@ -80,7 +90,10 @@ App
     │       └── ExercicioCard
     ├── Treino
     │   ├── SerieLinha           (reutilizável)
-    │   └── TemporizadorDescanso
+    │   ├── TemporizadorDescanso
+    │   ├── CalculadoraDiscos    (que discos pôr de cada lado da barra)
+    │   ├── ExerciciosParecidos  (sugestões ao substituir um exercício)
+    │   └── ListaExercicios      (para acrescentar ou substituir exercícios a meio do treino)
     ├── Historico
     │   └── TreinoCard           (reutilizável: versão detalhada)
     └── Exercicios
@@ -94,11 +107,13 @@ Comunicação pai → filho (`@Input`) e filho → pai (`@Output` + `EventEmitte
 |---|---|---|
 | `MenuLateral` | `aberto` | `fechar` |
 | `FichaCard` | `ficha` | `comecar`, `editar`, `apagar` |
-| `ListaExercicios` | `escolhidos` | `escolher` |
+| `ListaExercicios` | `escolhidos`, `grupoInicial` | `escolher` |
 | `ExercicioCard` | `exercicio`, `adicionado` | `adicionar` |
-| `SerieLinha` | `serie`, `anterior`, `atual` | `alterada`, `alternarFeita` |
+| `ExerciciosParecidos` | `exercicioId`, `escolhidos` | `escolher` |
+| `SerieLinha` | `serie`, `anterior`, `atual`, `recorde` | `alterada`, `alternarFeita` |
 | `TemporizadorDescanso` | `inicio`, `duracao` | `terminou` |
-| `TreinoCard` | `treino`, `detalhado` | `apagar` |
+| `CalculadoraDiscos` | `carga`, `barra` | — |
+| `TreinoCard` | `treino`, `detalhado` | `apagar`, `partilhar` |
 
 ## 6. Interfaces TypeScript
 
@@ -109,7 +124,7 @@ export type GrupoMuscular =
 export type TipoFicha = 'push' | 'pull' | 'legs' | 'upper' | 'lower' | 'full';
 
 export interface Exercicio {
-  id: number;              // id na wger
+  id: string;              // id na ExerciseDB (ex.: "EIeI8Vf")
   nome: string;
   grupo: GrupoMuscular;
   equipamento: string[];
@@ -117,7 +132,7 @@ export interface Exercicio {
 }
 
 export interface ExercicioNaFicha {
-  exercicioId: number;
+  exercicioId: string;
   nome: string;
   grupo: GrupoMuscular;
   series: number;          // séries planeadas
@@ -140,7 +155,7 @@ export interface Serie {
 }
 
 export interface ExercicioNoTreino {
-  exercicioId: number;
+  exercicioId: string;
   nome: string;
   grupo: GrupoMuscular;
   notas?: string;
@@ -149,32 +164,34 @@ export interface ExercicioNoTreino {
 
 export interface Treino {
   id: string;
-  fichaId: string;
+  fichaId: string;         // id da ficha, ou 'livre' (TREINO_LIVRE) num treino começado vazio
   nomeFicha: string;
   inicio: string;          // data ISO
   fim?: string;
   exercicios: ExercicioNoTreino[];
 }
 
-// Resposta da wger (só os campos que usamos)
-export interface RespostaPaginada<T> {
-  count: number;
-  next: string | null;
-  results: T[];
+// Resposta da ExerciseDB (só os campos que usamos)
+export interface RespostaExerciseDb<T> {
+  success: boolean;
+  meta: { total: number; hasNextPage: boolean; nextCursor?: string };
+  data: T[];
 }
 ```
 
-O nome e o grupo do exercício ficam copiados dentro da ficha e do treino. Assim, abrir uma ficha ou o histórico não precisa da API. Na fase 2, com base de dados, isto pode ser normalizado.
+O nome e o grupo do exercício ficam copiados dentro da ficha e do treino. Assim, abrir uma ficha ou o histórico não precisa da API. Na fase 2, com base de dados, isto pode ser normalizado. O `nome` fica em inglês, tal como vem da API, para que trocar de língua mude também as fichas e o histórico já guardados.
 
 ## 7. Services
 
 | Service | Responsabilidade |
 |---|---|
-| `ExercicioService` | Pedidos HTTP à wger e conversão da resposta para `Exercicio` |
+| `ExercicioService` | Pedidos HTTP à ExerciseDB e conversão da resposta para `Exercicio` |
 | `FichaService` | Criar, ler, editar e apagar fichas |
-| `TreinoService` | Guardar treinos, histórico, "anterior" de cada exercício e maior carga |
+| `TreinoService` | Começar treinos (de uma ficha ou vazios), guardar o treino em curso e o histórico, "anterior" de cada exercício e maior carga |
 | `TemaService` | Tema claro/escuro |
-| `ArmazenamentoService` | Ler e guardar no `localStorage` com métodos genéricos (`ler<T>`, `guardar<T>`); usado pelos três anteriores |
+| `TraducaoService` | Língua escolhida (PT/EN) e tradução dos nomes dos exercícios |
+| `ArmazenamentoService` | Ler e guardar no `localStorage` com métodos genéricos (`ler<T>`, `guardar<T>`); usado por `FichaService`, `TreinoService`, `TemaService` e `TraducaoService` |
+| `PartilhaService` | Desenhar o resumo de um treino como imagem (`canvas`, 1080 × 1350) e partilhá-la (Web Share API) ou descarregá-la |
 
 Todos com `@Injectable({ providedIn: 'root' })` e injetados pelo construtor, como nas aulas. O Angular 22 gera os services com um decorador novo (`@Service()`), mas o enunciado pede `@Injectable`, por isso é esse que se usa.
 
@@ -192,18 +209,18 @@ Tabela atualizada no fim da fase 1, com os ficheiros onde está cada coisa (úti
 | 2 | `@if` / `@for` | Em quase todas as páginas; `@for … @empty` nas listas vazias (fichas, histórico, exercícios) |
 | 2 | `@switch` | Estado do pedido HTTP (`lista-exercicios.html`), estado da página e confirmação (`treino.html`) |
 | 2 | Pipes nativos | `date` (Início, Histórico, cartões), `number` (kg e volume), `i18nPlural` ("1 exercício / 2 exercícios"), em português (`LOCALE_ID 'pt-PT'`) |
-| 2 | Pipe nosso | `pipes/duracao-pipe.ts`: "1:24", "58 min", "2,9 h" |
-| 3 | `@Input` / `@Output` + `EventEmitter` | `ExercicioCard`, `FichaCard`, `SerieLinha`, `TreinoCard`, `TemporizadorDescanso`, `ListaExercicios`, `MenuLateral`, `Cabecalho` |
-| 4 | Service com `@Injectable` e DI | 5 services em `servicos/`, injetados pelo construtor |
-| 4 | Interfaces TypeScript | `modelos/` (`Exercicio`, `Ficha`, `Treino`, `Serie`, `RespostaPaginada<T>`…) |
-| 5 | HttpClient + `Observable` + `subscribe()` | `servicos/exercicio-service.ts` (pedido e `map`) + `componentes/lista-exercicios` (subscribe, a carregar / erro / tentar outra vez) |
+| 2 | Pipes nossos | `pipes/duracao-pipe.ts`: "1:24", "58 min", "2,9 h"; `pipes/nome-exercicio-pipe.ts`: nome do exercício na língua escolhida (pipe impuro, para mudar logo ao carregar em PT/EN) |
+| 3 | `@Input` / `@Output` + `EventEmitter` | `ExercicioCard`, `FichaCard`, `SerieLinha`, `TreinoCard`, `TemporizadorDescanso`, `ListaExercicios`, `ExerciciosParecidos`, `CalculadoraDiscos`, `MenuLateral`, `Cabecalho` |
+| 4 | Service com `@Injectable` e DI | 7 services em `servicos/`, injetados pelo construtor |
+| 4 | Interfaces TypeScript | `modelos/` (`Exercicio`, `Ficha`, `Treino`, `Serie`, `RespostaExerciseDb<T>`…) |
+| 5 | HttpClient + `Observable` + `subscribe()` | `servicos/exercicio-service.ts` (pedido e `map`) + `componentes/lista-exercicios` (subscribe, a carregar / erro / tentar outra vez); `servicos/traducao-service.ts` (lê o JSON das traduções) |
 | 6 | Router: 3+ vistas, `router-outlet`, `routerLink` | `app.routes.ts` (7 vistas + `**`), `app.html`, menu lateral |
 | 7 | Reactive Forms com validação | `paginas/ficha-form`: `FormGroup`, `FormControl`, `FormArray`, `Validators` + validadores nossos (`utils/validadores.ts`), erros por campo, botão bloqueado |
-| 8 | `OnInit` | `ListaExercicios`, `FichaForm` (lê o `:id`), `Treino` (lê o `:fichaId`), `TemporizadorDescanso` |
-| 8 | `OnDestroy` | `TemporizadorDescanso` e `Treino` (param os `setInterval`), `ListaExercicios` (cancela o pedido), `Exercicios`, diretiva `Painel` |
+| 8 | `OnInit` | `ListaExercicios`, `ExerciciosParecidos` (pedem os exercícios), `FichaForm` (lê o `:id`), `Treino` (lê o `:fichaId`), `TemporizadorDescanso`, `CalculadoraDiscos` |
+| 8 | `OnDestroy` | `TemporizadorDescanso` e `Treino` (param os `setInterval` e `setTimeout`), `ListaExercicios` e `ExerciciosParecidos` (cancelam o pedido), `Exercicios`, diretiva `Painel` |
 | 8 | Organização | Pastas por responsabilidade (secção 9); acesso a dados só nos services |
 
-Extras (não pedidos): `ngOnChanges` no temporizador, `computed` e `signal`, diretiva `appPainel` (foco e teclado nos painéis), tema claro/escuro, "Adicionar ao ecrã principal" (manifesto e ícones), treino guardado a cada série (sobrevive a recarregar a página).
+Extras (não pedidos): `ngOnChanges` no temporizador, `computed` e `signal`, diretiva `appPainel` (foco e teclado nos painéis), tema claro/escuro, nomes dos exercícios em português ou inglês (botão PT/EN), pesquisa em português, `provideAppInitializer` (traduções carregadas antes de a app abrir), "Adicionar ao ecrã principal" (manifesto e ícones), treino guardado a cada série (sobrevive a recarregar a página), treino vazio e exercícios alterados a meio do treino (ex.: trocar a variação quando o banco está ocupado), com sugestões de exercícios parecidos; aviso de novo recorde; calculadora de discos; partilhar o treino como imagem; funciona sem rede (service worker do Angular, `ngsw-config.json`).
 
 ## 9. Estrutura de pastas
 
@@ -213,16 +230,21 @@ projeto angular/
 ├── docs/
 │   └── planeamento.md
 └── frontend/
+    ├── public/
+    │   ├── dados/           nomes-exercicios-pt.json (traduções)
+    │   └── icones e manifest.webmanifest
     └── src/app/
         ├── app.ts / app.html / app.css / app.routes.ts / app.config.ts
         ├── layout/          cabecalho, menu-lateral
         ├── paginas/         inicio, fichas, ficha-form, treino, historico, exercicios
-        ├── componentes/     ficha-card, exercicio-card, lista-exercicios, serie-linha, temporizador-descanso, treino-card
-        ├── servicos/        exercicio-service, ficha-service, treino-service, tema-service, armazenamento-service
-        ├── modelos/         interfaces da secção 6 (exercicio, ficha, treino, wger)
+        ├── componentes/     ficha-card, exercicio-card, lista-exercicios, exercicios-parecidos, serie-linha,
+        │                    temporizador-descanso, calculadora-discos, treino-card
+        ├── servicos/        exercicio-service, ficha-service, treino-service, tema-service, traducao-service,
+        │                    partilha-service, armazenamento-service
+        ├── modelos/         interfaces da secção 6 (exercicio, ficha, treino, exercisedb)
         ├── diretivas/       painel
-        ├── utils/           gerar-id, normalizar, validadores, datas
-        └── pipes/           duracao
+        ├── utils/           gerar-id, normalizar, validadores, datas, pesquisa, discos
+        └── pipes/           duracao, nome-exercicio
 ```
 
 ## 10. Plano de trabalho (um ramo e um PR por passo)

@@ -6,11 +6,18 @@
         <!-- pipe date: "segunda-feira, 20 out. · 18:40" -->
         <p class="treino-data">{{ treino.inicio | date: "EEEE, d MMM '·' HH:mm" }}</p>
       </div>
-      <button type="button" class="botao-icone" [attr.aria-label]="'Apagar o treino ' + treino.nomeFicha" (click)="apagar.emit(treino)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />
-        </svg>
-      </button>
+      <div class="treino-botoes">
+        <button type="button" class="botao-icone" [attr.aria-label]="'Partilhar o treino ' + treino.nomeFicha + ' como imagem'" (click)="partilhar.emit(treino)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 3v12M7 8l5-5 5 5M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5" />
+          </svg>
+        </button>
+        <button type="button" class="botao-icone" [attr.aria-label]="'Apagar o treino ' + treino.nomeFicha" (click)="apagar.emit(treino)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />
+          </svg>
+        </button>
+      </div>
     </div>
 
     <dl class="numeros">
@@ -23,8 +30,14 @@
       <ul class="exercicios">
         @for (exercicio of exercicios; track $index) {
           <li>
-            <span>{{ exercicio.feitas }} × {{ exercicio.nome }}</span>
-            <span class="melhor">{{ exercicio.melhor.carga | number: '1.0-2' }} kg × {{ exercicio.melhor.repeticoes }}</span>
+            <span>{{ exercicio.feitas }} × {{ exercicio.nome | nomeExercicio }}</span>
+            <span class="melhor">
+              @if (exercicio.recorde) {
+                <svg class="trofeu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4zM7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4" /></svg>
+                <span class="sr-only">Novo recorde:</span>
+              }
+              {{ exercicio.melhor.carga | number: '1.0-2' }} kg × {{ exercicio.melhor.repeticoes }}
+            </span>
           </li>
         }
       </ul>

@@ -12,6 +12,13 @@
   gap: 20px;
 }
 
+/* Cartão de destaque + "Começar treino vazio" (ocupam a mesma célula da grelha) */
+.comecar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 /* ---------- Cartão de destaque (lima) ---------- */
 .destaque {
   padding: 20px;

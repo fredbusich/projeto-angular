@@ -1,0 +1,29 @@
+<section class="parecidos" aria-labelledby="titulo-parecidos">
+  <h3 id="titulo-parecidos" class="titulo">Sugestões parecidas</h3>
+
+  @switch (estado()) {
+    @case ('a-carregar') {
+      <p class="texto-secundario" role="status">A procurar exercícios parecidos…</p>
+    }
+
+    @case ('erro') {
+      <p class="texto-secundario">Não foi possível carregar sugestões. Podes procurar na lista em baixo.</p>
+    }
+
+    @case ('pronto') {
+      <ul class="lista">
+        @for (exercicio of exercicios(); track exercicio.id) {
+          <li>
+            <app-exercicio-card
+              [exercicio]="exercicio"
+              [adicionado]="escolhidos.includes(exercicio.id)"
+              (adicionar)="escolher.emit($event)"
+            />
+          </li>
+        } @empty {
+          <li class="texto-secundario">Sem sugestões para este exercício. Procura na lista em baixo.</li>
+        }
+      </ul>
+    }
+  }
+</section>

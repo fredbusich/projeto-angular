@@ -4,14 +4,16 @@ import { AbstractControl, FormArray, FormControl, FormGroup, ReactiveFormsModule
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ListaExercicios } from '../../componentes/lista-exercicios/lista-exercicios';
 import { Painel } from '../../diretivas/painel';
+import { NomeExercicioPipe } from '../../pipes/nome-exercicio-pipe';
 import { Exercicio, GrupoMuscular, NOMES_GRUPOS } from '../../modelos/exercicio';
+import { imagemDoExercicio } from '../../modelos/exercisedb';
 import { DadosFicha, ExercicioNaFicha, NOMES_TIPOS, TipoFicha } from '../../modelos/ficha';
 import { FichaService } from '../../servicos/ficha-service';
 import { inteiro, naoSoEspacos } from '../../utils/validadores';
 
 // Os campos de um exercício dentro do formulário
 type GrupoExercicio = FormGroup<{
-  exercicioId: FormControl<number>;
+  exercicioId: FormControl<string>;
   nome: FormControl<string>;
   grupo: FormControl<GrupoMuscular>;
   series: FormControl<number | null>;
@@ -20,7 +22,7 @@ type GrupoExercicio = FormGroup<{
 
 // Formulário para criar (/fichas/nova) e editar (/fichas/:id/editar) uma ficha.
 @Component({
-  imports: [ReactiveFormsModule, RouterLink, I18nPluralPipe, ListaExercicios, Painel],
+  imports: [ReactiveFormsModule, RouterLink, I18nPluralPipe, ListaExercicios, Painel, NomeExercicioPipe],
   selector: 'app-ficha-form',
   styleUrl: './ficha-form.css',
   templateUrl: './ficha-form.html',
@@ -29,6 +31,7 @@ export class FichaForm implements OnInit {
   protected readonly nomesTipos = NOMES_TIPOS;
   protected readonly tipos = Object.keys(NOMES_TIPOS) as TipoFicha[];
   protected readonly nomesGrupos = NOMES_GRUPOS;
+  protected readonly imagem = imagemDoExercicio;
   protected readonly plural = { '=0': 'nenhum', '=1': '# exercício', other: '# exercícios' };
 
   // O formulário reativo: um FormGroup com um FormControl por campo e um FormArray para a lista
@@ -48,7 +51,7 @@ export class FichaForm implements OnInit {
 
   // Painel para escolher exercícios e ids dos que já estão na ficha (aparecem com ✓)
   protected readonly seletorAberto = signal(false);
-  protected readonly idsEscolhidos = signal<number[]>([]);
+  protected readonly idsEscolhidos = signal<string[]>([]);
 
   constructor(
     private fichaService: FichaService,

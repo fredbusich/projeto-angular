@@ -1,9 +1,10 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, signal } from '@angular/core';
 import { Exercicio, NOMES_GRUPOS } from '../../modelos/exercicio';
+import { NomeExercicioPipe } from '../../pipes/nome-exercicio-pipe';
 
 // Cartão reutilizável de um exercício: usado na biblioteca e, mais tarde, no formulário da ficha.
 @Component({
-  imports: [],
+  imports: [NomeExercicioPipe],
   selector: 'app-exercicio-card',
   styleUrl: './exercicio-card.css',
   templateUrl: './exercicio-card.html',
@@ -17,6 +18,9 @@ export class ExercicioCard {
 
   // filho -> pai: o utilizador quer adicionar este exercício a uma ficha
   @Output() adicionar = new EventEmitter<Exercicio>();
+
+  // A imagem não carregou (ex.: sem rede e ainda não guardada): mostra a sigla no lugar dela
+  protected readonly imagemFalhou = signal(false);
 
   // "Peito · Barra · Banco"
   protected get detalhe(): string {

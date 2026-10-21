@@ -1,0 +1,50 @@
+{
+  "$schema": "./node_modules/@angular/service-worker/config/schema.json",
+  "index": "/index.html",
+  "assetGroups": [
+    {
+      "name": "app",
+      "installMode": "prefetch",
+      "resources": {
+        "files": ["/favicon.ico", "/index.csr.html", "/index.html", "/manifest.webmanifest", "/*.css", "/*.js"]
+      }
+    },
+    {
+      "name": "recursos",
+      "installMode": "prefetch",
+      "updateMode": "prefetch",
+      "resources": {
+        "files": ["/**/*.(svg|cur|jpg|jpeg|png|apng|webp|avif|gif|otf|ttf|woff|woff2)", "/dados/**"]
+      }
+    },
+    {
+      "name": "letras",
+      "installMode": "lazy",
+      "updateMode": "lazy",
+      "resources": {
+        "urls": ["https://fonts.googleapis.com/**", "https://fonts.gstatic.com/**"]
+      }
+    }
+  ],
+  "dataGroups": [
+    {
+      "name": "api-exercicios",
+      "urls": ["https://oss.exercisedb.dev/api/**"],
+      "cacheConfig": {
+        "strategy": "performance",
+        "maxSize": 500,
+        "maxAge": "7d"
+      }
+    },
+    {
+      "name": "imagens-exercicios",
+      "urls": ["https://static.exercisedb.dev/media/**"],
+      "cacheConfig": {
+        "strategy": "performance",
+        "maxSize": 600,
+        "maxAge": "90d",
+        "cacheOpaqueResponses": true
+      }
+    }
+  ]
+}

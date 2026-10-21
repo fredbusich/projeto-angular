@@ -2,8 +2,8 @@
   <input
     type="search"
     class="campo"
-    placeholder="Pesquisar exercício ou equipamento…"
-    aria-label="Pesquisar exercício ou equipamento"
+    placeholder="Pesquisar (ex.: supino inclinado)…"
+    aria-label="Pesquisar exercícios"
     [(ngModel)]="pesquisa"
   />
 
@@ -24,22 +24,27 @@
 
   @case ('erro') {
     <div class="mensagem" role="alert">
-      <p class="texto-erro">Não foi possível carregar os exercícios. Verifica a ligação à internet.</p>
+      <p class="texto-erro">
+        Não foi possível carregar os exercícios: sem ligação à internet, ou demasiados pedidos seguidos à API
+        (aceita 10 em cada 10 segundos). Tenta outra vez daqui a uns segundos.
+      </p>
       <button type="button" class="botao" (click)="carregar()">Tentar outra vez</button>
     </div>
   }
 
   @case ('pronto') {
-    <p class="texto-secundario contagem">
-      @if (pesquisa().trim()) {
-        {{ visiveis().length }} de {{ exercicios().length }} carregados
+    <p class="texto-secundario contagem" role="status">
+      @if (pesquisaFeita() && haMais()) {
+        Primeiros {{ exercicios().length }} resultados para «{{ pesquisaFeita() }}»
+      } @else if (pesquisaFeita()) {
+        {{ exercicios().length | i18nPlural: pluralResultados }} para «{{ pesquisaFeita() }}»
       } @else {
         {{ exercicios().length }} de {{ total() | number }} exercícios
       }
     </p>
 
     <ul class="lista">
-      @for (exercicio of visiveis(); track exercicio.id) {
+      @for (exercicio of exercicios(); track exercicio.id) {
         <li>
           <!-- pai -> filho com [exercicio] e [adicionado]; filho -> pai com (adicionar) -->
           <app-exercicio-card
@@ -50,8 +55,7 @@
         </li>
       } @empty {
         <li class="texto-secundario">
-          Nenhum exercício encontrado nos que estão carregados.
-          @if (haMais()) { Experimenta carregar mais ou escolher um grupo muscular. }
+          Nenhum exercício encontrado. Experimenta palavras mais simples, por exemplo «supino», «agachamento» ou «remada».
         </li>
       }
     </ul>
@@ -68,7 +72,7 @@
     }
 
     <p class="creditos texto-secundario">
-      Exercícios e imagens: <a href="https://wger.de" target="_blank" rel="noopener">wger.de</a> (licenças CC BY-SA).
+      Exercícios e animações: <a href="https://ascendapi.com" target="_blank" rel="noopener">ExerciseDB, da AscendAPI</a>.
     </p>
   }
 }
