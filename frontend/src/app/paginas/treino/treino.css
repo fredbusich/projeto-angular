@@ -63,8 +63,84 @@
   background: var(--cartao);
 }
 
+/* Imagem, nome do exercício e o botão de opções (⋯) à direita */
+.exercicio-cabecalho {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .exercicio-nome {
+  flex: 1;
+  min-width: 0;
   font-size: 24px;
+}
+
+.exercicio-cabecalho .botao-icone {
+  border-color: transparent;
+  background: transparent;
+}
+
+/* Treino vazio, antes do primeiro exercício */
+.vazio {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: 1px dashed var(--linha);
+  border-radius: 20px;
+}
+
+.vazio h2,
+.vazio p {
+  margin: 0;
+}
+
+/* ---------- Painel de opções de um exercício ---------- */
+.opcoes-ordem {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.aviso-feitas {
+  color: var(--erro);
+  font-weight: 500;
+}
+
+/* ---------- Recordes ---------- */
+/* Aviso em cima, para não tapar o temporizador de descanso (fixo no fundo) */
+.aviso-recorde {
+  top: 16px;
+  bottom: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--destaque);
+  color: var(--sobre-destaque);
+}
+
+.aviso-recorde .trofeu {
+  width: 24px;
+  height: 24px;
+  color: currentColor;
+}
+
+.recordes-resumo {
+  font-weight: 500;
+}
+
+/* "Todos os exercícios", por baixo das sugestões ao substituir */
+.titulo-lista {
+  margin: 8px 0 0;
+  font-size: 20px;
+}
+
+/* Vermelho só no contorno: é uma opção da lista, não a ação principal */
+.botao-remover {
+  border-color: var(--erro);
+  background: transparent;
+  color: var(--erro);
 }
 
 .etiquetas {
@@ -79,6 +155,13 @@
   background: var(--cartao-elevado);
   font-size: 12px;
   font-weight: 600;
+}
+
+/* "Discos": uma etiqueta que se pode carregar (abre a calculadora) */
+.botao-discos {
+  border: 1px solid var(--destaque-linha);
+  color: var(--destaque-linha);
+  cursor: pointer;
 }
 
 /* As mesmas colunas do SerieLinha */

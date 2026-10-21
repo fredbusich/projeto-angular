@@ -28,21 +28,33 @@
           <button type="button" class="botao botao-principal" (click)="pedirConfirmacao('terminar')">Terminar</button>
         </div>
 
-        <div class="progresso">
-          <div class="progresso-texto texto-secundario">
-            <span>{{ seriesFeitas() }} de {{ todasAsSeries().length }} séries feitas</span>
-            <span>{{ volume() | number: '1.0-1' }} kg de volume</span>
+        @if (t.exercicios.length > 0) {
+          <div class="progresso">
+            <div class="progresso-texto texto-secundario">
+              <span>{{ seriesFeitas() }} de {{ todasAsSeries().length }} séries feitas</span>
+              <span>{{ volume() | number: '1.0-1' }} kg de volume</span>
+            </div>
+            <div class="barra" aria-hidden="true"><div class="barra-cheia" [style.width.%]="percentagem()"></div></div>
           </div>
-          <div class="barra" aria-hidden="true"><div class="barra-cheia" [style.width.%]="percentagem()"></div></div>
-        </div>
+        }
 
         @for (exercicio of t.exercicios; track exercicio.exercicioId; let e = $index) {
           <section class="exercicio-treino" [attr.aria-labelledby]="'exercicio-' + e">
-            <h2 class="exercicio-nome" [id]="'exercicio-' + e">{{ exercicio.nome }}</h2>
+            <div class="exercicio-cabecalho">
+              <!-- alt vazio: a imagem é decorativa, o nome está mesmo ao lado -->
+              <img class="miniatura" [src]="imagem(exercicio.exercicioId)" alt="" width="56" height="56" loading="lazy" (error)="miniatura.classList.add('falhou')" #miniatura />
+              <h2 class="exercicio-nome" [id]="'exercicio-' + e">{{ exercicio.nome | nomeExercicio }}</h2>
+              <button type="button" class="botao-icone" [attr.aria-label]="'Opções de ' + (exercicio.nome | nomeExercicio)" (click)="abrirOpcoes(e)">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /></svg>
+              </button>
+            </div>
             <div class="etiquetas">
               <span class="etiqueta">{{ nomesGrupos[exercicio.grupo] }}</span>
               @if (recordes[exercicio.exercicioId] > 0) {
                 <span class="etiqueta">Recorde: {{ recordes[exercicio.exercicioId] | number: '1.0-2' }} kg</span>
+              }
+              @if (barra(exercicio.nome) !== null) {
+                <button type="button" class="etiqueta botao-discos" (click)="abrirDiscos(e)">Discos</button>
               }
             </div>
 
@@ -56,6 +68,7 @@
                 [serie]="serie"
                 [anterior]="anteriores[exercicio.exercicioId][s]"
                 [atual]="proxima() === e + '-' + s"
+                [recorde]="eRecorde(exercicio.exercicioId, serie)"
                 (alterada)="alterarSerie(e, s, $event)"
                 (alternarFeita)="alternarFeita(e, s)"
               />
@@ -70,12 +83,19 @@
               class="campo notas"
               type="text"
               placeholder="Notas (ex.: pegada média, descer devagar)"
-              [attr.aria-label]="'Notas de ' + exercicio.nome"
+              [attr.aria-label]="'Notas de ' + (exercicio.nome | nomeExercicio)"
               [value]="exercicio.notas ?? ''"
               (change)="alterarNotas(e, $event)"
             />
           </section>
+        } @empty {
+          <div class="vazio">
+            <h2>Ainda sem exercícios</h2>
+            <p class="texto-secundario">Acrescenta os exercícios à medida que treinas e marca as séries que fizeres.</p>
+          </div>
         }
+
+        <button type="button" class="botao botao-tracejado" (click)="abrirSeletor({ modo: 'adicionar' })">+ Adicionar exercício</button>
 
         <button type="button" class="botao cancelar" (click)="pedirConfirmacao('cancelar')">Cancelar treino</button>
       </div>
@@ -85,17 +105,44 @@
         <app-temporizador-descanso [inicio]="inicio" [duracao]="segundosDescanso" (terminou)="fimDoDescanso()" />
       }
 
+      <!-- Aviso de novo recorde (desaparece sozinho ao fim de 5 s) -->
+      @if (novoRecorde(); as r) {
+        <div class="aviso aviso-recorde" role="status">
+          <svg class="trofeu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4zM7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4" /></svg>
+          <span>
+            <strong>Novo recorde!</strong>
+            {{ r.nome | nomeExercicio }}: {{ r.carga | number: '1.0-2' }} kg (antes {{ r.anterior | number: '1.0-2' }} kg)
+          </span>
+        </div>
+      }
+
       @if (confirmacao(); as tipo) {
         <button type="button" class="painel-fundo" aria-label="Voltar ao treino" (click)="fecharConfirmacao()"></button>
         <section class="painel" appPainel role="alertdialog" aria-modal="true" aria-labelledby="titulo-confirmacao">
           @switch (tipo) {
             @case ('terminar') {
-              <h2 id="titulo-confirmacao">Terminar o treino?</h2>
-              <p class="texto-secundario">
-                {{ seriesFeitas() }} de {{ todasAsSeries().length }} séries feitas em {{ segundosDecorridos() | duracao: 'texto' }}.
-                @if (seriesFeitas() < todasAsSeries().length) { As séries por fazer não contam. }
-              </p>
-              <button type="button" class="botao botao-principal" (click)="terminar()">Terminar e guardar</button>
+              @if (seriesFeitas() > 0) {
+                <h2 id="titulo-confirmacao">Terminar o treino?</h2>
+                <p class="texto-secundario">
+                  {{ seriesFeitas() }} de {{ todasAsSeries().length }} séries feitas em {{ segundosDecorridos() | duracao: 'texto' }}.
+                  @if (seriesFeitas() < todasAsSeries().length) { As séries por fazer não contam. }
+                </p>
+                @if (recordesBatidos().length > 0) {
+                  <p class="recordes-resumo">
+                    <svg class="trofeu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4zM7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4" /></svg>
+                    {{ recordesBatidos().length | i18nPlural: pluralRecordes }}:
+                    @for (r of recordesBatidos(); track r.exercicioId; let ultimo = $last) {
+                      {{ r.nome | nomeExercicio }} ({{ r.melhor.carga | number: '1.0-2' }} kg){{ ultimo ? '.' : ',' }}
+                    }
+                  </p>
+                }
+                <button type="button" class="botao botao-principal" (click)="terminar()">Terminar e guardar</button>
+              } @else {
+                <!-- Sem séries feitas não há nada para o histórico -->
+                <h2 id="titulo-confirmacao">Ainda não fizeste nenhuma série</h2>
+                <p class="texto-secundario">Para o treino ficar no histórico, marca as séries que fizeres. Se terminares agora, nada fica guardado.</p>
+                <button type="button" class="botao botao-perigo" (click)="cancelar()">Terminar sem guardar</button>
+              }
             }
             @case ('cancelar') {
               <h2 id="titulo-confirmacao">Cancelar o treino?</h2>
@@ -104,6 +151,70 @@
             }
           }
           <button type="button" class="botao" (click)="fecharConfirmacao()">Continuar a treinar</button>
+        </section>
+      }
+
+      <!-- Opções de um exercício: substituir, mudar a ordem, remover -->
+      @if (comOpcoes(); as op) {
+        <button type="button" class="painel-fundo" aria-label="Fechar as opções" (click)="fecharOpcoes()"></button>
+        <section class="painel" appPainel role="dialog" aria-modal="true" aria-labelledby="titulo-opcoes">
+          <h2 id="titulo-opcoes">{{ op.exercicio.nome | nomeExercicio }}</h2>
+          <p class="texto-secundario">
+            Exercício {{ op.indice + 1 }} de {{ t.exercicios.length }}.
+            @if (t.fichaId !== treinoLivre) { As alterações são só para este treino: a ficha fica igual. }
+          </p>
+          @if (op.feitas > 0) {
+            <p class="aviso-feitas">Já tens {{ op.feitas | i18nPlural: pluralFeitas }} neste exercício. Se o substituíres ou removeres, perdem-se.</p>
+          }
+          <button type="button" class="botao" (click)="abrirSeletor({ modo: 'substituir', indice: op.indice })">Substituir por outro exercício</button>
+          <div class="opcoes-ordem">
+            <button type="button" class="botao" [disabled]="op.indice === 0" (click)="moverExercicio(op.indice, -1)">↑ Subir</button>
+            <button type="button" class="botao" [disabled]="op.indice === t.exercicios.length - 1" (click)="moverExercicio(op.indice, 1)">↓ Descer</button>
+          </div>
+          <button type="button" class="botao botao-remover" (click)="removerExercicio(op.indice)">Remover do treino</button>
+          <button type="button" class="botao" (click)="fecharOpcoes()">Fechar</button>
+        </section>
+      }
+
+      <!-- Calculadora de discos (abre com a carga da próxima série deste exercício) -->
+      @if (discos(); as d) {
+        <button type="button" class="painel-fundo" aria-label="Fechar a calculadora" (click)="discos.set(null)"></button>
+        <section class="painel" appPainel role="dialog" aria-modal="true" aria-labelledby="titulo-discos">
+          <h2 id="titulo-discos">Calculadora de discos</h2>
+          <p class="texto-secundario">{{ d.nome | nomeExercicio }}</p>
+          <app-calculadora-discos [carga]="d.carga" [barra]="d.barra" />
+          <button type="button" class="botao" (click)="discos.set(null)">Fechar</button>
+        </section>
+      }
+
+      <!-- Lista de exercícios para acrescentar ou substituir: a mesma da página Exercícios -->
+      @if (seletor()) {
+        <button type="button" class="painel-fundo" aria-label="Fechar" (click)="fecharSeletor()"></button>
+        <section class="painel painel-grande" appPainel role="dialog" aria-modal="true" aria-labelledby="titulo-seletor">
+          <div class="linha-titulo">
+            @if (aSubstituir(); as antigo) {
+              <h2 id="titulo-seletor">Substituir {{ antigo.nome | nomeExercicio }}</h2>
+              <button type="button" class="botao" (click)="fecharSeletor()">Cancelar</button>
+            } @else {
+              <h2 id="titulo-seletor">Adicionar exercícios</h2>
+              <button type="button" class="botao botao-principal" (click)="fecharSeletor()">Concluir</button>
+            }
+          </div>
+          <!-- Ao substituir: primeiro sugestões parecidas (mesmo músculo e movimento), depois a lista completa,
+               que abre no grupo muscular do exercício (ex.: outro de peito) -->
+          @if (aSubstituir(); as antigo) {
+            <app-exercicios-parecidos
+              [exercicioId]="antigo.exercicioId"
+              [escolhidos]="idsNoTreino()"
+              (escolher)="escolherExercicio($event)"
+            />
+            <h3 class="titulo-lista">Todos os exercícios</h3>
+          }
+          <app-lista-exercicios
+            [escolhidos]="idsNoTreino()"
+            [grupoInicial]="aSubstituir()?.grupo ?? null"
+            (escolher)="escolherExercicio($event)"
+          />
         </section>
       }
     }

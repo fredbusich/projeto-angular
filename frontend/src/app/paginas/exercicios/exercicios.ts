@@ -3,12 +3,14 @@ import { Component, HostListener, OnDestroy, Signal, signal } from '@angular/cor
 import { RouterLink } from '@angular/router';
 import { ListaExercicios } from '../../componentes/lista-exercicios/lista-exercicios';
 import { Painel } from '../../diretivas/painel';
+import { NomeExercicioPipe } from '../../pipes/nome-exercicio-pipe';
 import { Exercicio } from '../../modelos/exercicio';
 import { Ficha } from '../../modelos/ficha';
 import { FichaService } from '../../servicos/ficha-service';
+import { TraducaoService } from '../../servicos/traducao-service';
 
 @Component({
-  imports: [RouterLink, I18nPluralPipe, ListaExercicios, Painel],
+  imports: [RouterLink, I18nPluralPipe, ListaExercicios, Painel, NomeExercicioPipe],
   selector: 'app-exercicios',
   styleUrl: './exercicios.css',
   templateUrl: './exercicios.html',
@@ -24,7 +26,10 @@ export class Exercicios implements OnDestroy {
 
   private temporizadorAviso?: ReturnType<typeof setTimeout>;
 
-  constructor(private fichaService: FichaService) {
+  constructor(
+    private fichaService: FichaService,
+    private traducao: TraducaoService,
+  ) {
     this.fichas = this.fichaService.fichas;
   }
 
@@ -48,8 +53,9 @@ export class Exercicios implements OnDestroy {
   }
 
   protected adicionarAFicha(ficha: Ficha, exercicio: Exercicio): void {
+    const nome = this.traducao.nome(exercicio.nome); // o nome guarda-se em inglês; o aviso mostra-o na língua escolhida
     if (ficha.exercicios.some((e) => e.exercicioId === exercicio.id)) {
-      this.mostrarAviso(`«${exercicio.nome}» já está na ficha ${ficha.nome}.`);
+      this.mostrarAviso(`«${nome}» já está na ficha ${ficha.nome}.`);
     } else {
       this.fichaService.atualizar(ficha.id, {
         nome: ficha.nome,
@@ -59,7 +65,7 @@ export class Exercicios implements OnDestroy {
           { exercicioId: exercicio.id, nome: exercicio.nome, grupo: exercicio.grupo, series: 3, repeticoes: 10 },
         ],
       });
-      this.mostrarAviso(`«${exercicio.nome}» adicionado à ficha ${ficha.nome} (3 × 10).`);
+      this.mostrarAviso(`«${nome}» adicionado à ficha ${ficha.nome} (3 × 10).`);
     }
     this.fecharPainel();
   }

@@ -14,6 +14,7 @@ export class SerieLinha {
   @Input({ required: true }) serie!: Serie;
   @Input() anterior?: Serie;      // a mesma série no último treino (pode não existir)
   @Input() atual = false;         // true na próxima série a fazer (fica destacada)
+  @Input() recorde = false;       // true se esta série passou o recorde do exercício (mostra um troféu)
 
   // filho -> pai
   @Output() alterada = new EventEmitter<Serie>();   // mudou a carga ou as repetições

@@ -1,0 +1,73 @@
+.calculadora {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.rotulo-total {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.chips {
+  flex-wrap: wrap;
+}
+
+/* ---------- Desenho da barra ---------- */
+.desenho {
+  height: 120px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.colar {
+  width: 10px;
+  height: 40px;
+  border-radius: 2px;
+  background: #8A8A8F;
+}
+
+.manga {
+  flex: 1;
+  height: 12px;
+  border-radius: 0 3px 3px 0;
+  background: #8A8A8F;
+}
+
+/* Discos com as cores olímpicas; a altura cresce com o peso */
+.disco {
+  width: 24px;
+  height: 110px;
+  display: grid;
+  place-items: center;
+  border-radius: 4px;
+  color: #FFFFFF;
+  font-size: 11px;
+  font-weight: 700;
+  writing-mode: vertical-rl;
+}
+
+.disco[data-kg='25'] { background: #D7263D; }
+.disco[data-kg='20'] { background: #1F5FD1; }
+.disco[data-kg='15'] { height: 98px; background: #E8B10E; color: #0B0B0C; }
+.disco[data-kg='10'] { height: 84px; background: #2E9E4F; }
+.disco[data-kg='5'] { width: 18px; height: 66px; background: #F2F2EF; color: #0B0B0C; }
+.disco[data-kg='2.5'] { width: 16px; height: 52px; background: #D7263D; font-size: 9px; }
+.disco[data-kg='1.25'] { width: 14px; height: 44px; background: #B8B8BD; color: #0B0B0C; font-size: 8px; }
+
+.resultado,
+.aviso-conta {
+  margin: 0;
+}
+
+.resultado {
+  font-size: 18px;
+}
+
+.aviso-conta {
+  color: var(--erro);
+  font-weight: 500;
+}

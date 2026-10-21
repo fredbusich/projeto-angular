@@ -61,16 +61,6 @@
   color: var(--sobre-destaque);
 }
 
-/* Texto só para leitores de ecrã */
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-
 .mes {
   margin-bottom: 24px;
   display: flex;

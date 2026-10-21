@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { TreinoCard } from '../../componentes/treino-card/treino-card';
 import { Painel } from '../../diretivas/painel';
 import { Treino } from '../../modelos/treino';
+import { PartilhaService } from '../../servicos/partilha-service';
 import { TreinoService } from '../../servicos/treino-service';
 import { inicioDaSemana } from '../../utils/datas';
 
@@ -57,8 +58,16 @@ export class Historico {
     return grupos;
   });
 
-  constructor(private treinoService: TreinoService) {
+  constructor(
+    private treinoService: TreinoService,
+    private partilhaService: PartilhaService,
+  ) {
     this.treinos = this.treinoService.treinos;
+  }
+
+  // O TreinoCard emitiu (partilhar): cria a imagem e abre a partilha (ou descarrega-a)
+  protected partilhar(treino: Treino): void {
+    this.partilhaService.partilhar(treino);
   }
 
   // O TreinoCard emitiu (apagar): pede confirmação primeiro

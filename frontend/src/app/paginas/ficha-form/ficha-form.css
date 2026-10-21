@@ -91,6 +91,11 @@
   text-align: center;
 }
 
+.exercicio-topo .miniatura {
+  width: 48px;
+  height: 48px;
+}
+
 .exercicio-nome {
   flex: 1;
   min-width: 0;
@@ -113,9 +118,11 @@
   cursor: default;
 }
 
+/* Séries | Repetições | ↑ ↓ ✕ (os botões alinhados pelo fundo, com os campos) */
 .exercicio-campos {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+  align-items: end;
   gap: 8px;
 }
 

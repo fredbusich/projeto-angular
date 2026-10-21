@@ -56,6 +56,11 @@
   gap: 12px;
 }
 
+.treino-botoes {
+  display: flex;
+  gap: 6px;
+}
+
 .numeros {
   margin: 0;
   display: grid;

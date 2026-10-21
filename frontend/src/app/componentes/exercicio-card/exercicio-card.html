@@ -1,18 +1,18 @@
 <article class="exercicio">
-  @if (exercicio.imagem) {
+  @if (exercicio.imagem && !imagemFalhou()) {
     <!-- alt vazio: a imagem é decorativa, o nome já está escrito ao lado -->
-    <img class="exercicio-imagem" [src]="exercicio.imagem" alt="" loading="lazy" width="64" height="64" />
+    <img class="exercicio-imagem" [src]="exercicio.imagem" alt="" loading="lazy" width="64" height="64" (error)="imagemFalhou.set(true)" />
   } @else {
     <span class="exercicio-imagem sem-imagem" aria-hidden="true">{{ sigla }}</span>
   }
 
   <div class="exercicio-info">
-    <h3 class="exercicio-nome">{{ exercicio.nome }}</h3>
+    <h3 class="exercicio-nome">{{ exercicio.nome | nomeExercicio }}</h3>
     <p class="exercicio-detalhe">{{ detalhe }}</p>
   </div>
 
   @if (adicionado) {
-    <button type="button" class="botao-icone adicionado" disabled [attr.aria-label]="exercicio.nome + ' já foi adicionado'">
+    <button type="button" class="botao-icone adicionado" disabled [attr.aria-label]="(exercicio.nome | nomeExercicio) + ' já foi adicionado'">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M5 12l5 5 9-10" />
       </svg>
@@ -21,7 +21,7 @@
     <button
       type="button"
       class="botao-icone"
-      [attr.aria-label]="'Adicionar ' + exercicio.nome"
+      [attr.aria-label]="'Adicionar ' + (exercicio.nome | nomeExercicio)"
       (click)="adicionar.emit(exercicio)"
     >
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">

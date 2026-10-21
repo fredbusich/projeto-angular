@@ -29,15 +29,16 @@ export function nomesDosGrupos(exercicios: { grupo: GrupoMuscular }[]): string {
 
 // Um exercício da biblioteca, já no formato da nossa app
 export interface Exercicio {
-  id: number;              // id na API wger
+  id: string;              // id na API ExerciseDB (ex.: "EIeI8Vf")
   nome: string;
   grupo: GrupoMuscular;
   equipamento: string[];
-  imagem?: string;         // opcional: nem todos têm imagem
+  imagem?: string;         // animação do exercício
 }
 
 // Uma página de resultados da biblioteca
 export interface PaginaExercicios {
-  total: number;           // quantos exercícios existem ao todo
+  total: number;           // quantos exercícios há com estes filtros
+  proximo: string | null;  // marcador da página seguinte (null = não há mais)
   exercicios: Exercicio[];
 }

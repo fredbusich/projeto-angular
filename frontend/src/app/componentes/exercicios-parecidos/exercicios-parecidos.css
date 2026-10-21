@@ -1,0 +1,33 @@
+:host {
+  display: block;
+}
+
+.parecidos {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.titulo {
+  margin: 0;
+  font-size: 20px;
+}
+
+.parecidos p {
+  margin: 0;
+}
+
+.lista {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+
+/* Desktop: duas colunas, como a lista completa */
+@media (min-width: 768px) {
+  .lista {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

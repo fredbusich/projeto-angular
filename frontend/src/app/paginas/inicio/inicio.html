@@ -3,37 +3,47 @@
 <h1 class="pagina-titulo">{{ saudacao }}!</h1>
 
 <div class="grelha">
-  <!-- O cartão de destaque muda conforme o caso: treino a decorrer, próximo treino ou boas-vindas -->
-  @if (emCurso(); as treino) {
-    <section class="destaque" aria-labelledby="titulo-destaque">
-      <p class="destaque-rotulo">Treino a decorrer</p>
-      <h2 class="destaque-nome" id="titulo-destaque">{{ treino.nomeFicha }}</h2>
-      <p class="destaque-texto">
-        {{ seriesFeitas(treino) }} de {{ totalSeries(treino) }} séries feitas · começou às {{ treino.inicio | date: 'HH:mm' }}
-      </p>
-      <a class="botao botao-escuro" [routerLink]="['/treino', treino.fichaId]">Continuar treino</a>
-    </section>
-  } @else if (proxima(); as ficha) {
-    <section class="destaque" aria-labelledby="titulo-destaque">
-      <p class="destaque-rotulo">Próximo treino · {{ nomesTipos[ficha.tipo] }}</p>
-      <h2 class="destaque-nome" id="titulo-destaque">{{ ficha.nome }}</h2>
-      <p class="destaque-texto">{{ grupos(ficha) }}</p>
-      <p class="destaque-texto">{{ ficha.exercicios.length | i18nPlural: plural }} · {{ ultimaVez(ficha) }}</p>
-      <a class="botao botao-escuro" [routerLink]="['/treino', ficha.id]">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4l13 8-13 8z" /></svg>
-        Começar treino
+  <div class="comecar">
+    <!-- O cartão de destaque muda conforme o caso: treino a decorrer, próximo treino ou boas-vindas -->
+    @if (emCurso(); as treino) {
+      <section class="destaque" aria-labelledby="titulo-destaque">
+        <p class="destaque-rotulo">Treino a decorrer</p>
+        <h2 class="destaque-nome" id="titulo-destaque">{{ treino.nomeFicha }}</h2>
+        <p class="destaque-texto">
+          {{ seriesFeitas(treino) }} de {{ totalSeries(treino) }} séries feitas · começou às {{ treino.inicio | date: 'HH:mm' }}
+        </p>
+        <a class="botao botao-escuro" [routerLink]="['/treino', treino.fichaId]">Continuar treino</a>
+      </section>
+    } @else if (proxima(); as ficha) {
+      <section class="destaque" aria-labelledby="titulo-destaque">
+        <p class="destaque-rotulo">Próximo treino · {{ nomesTipos[ficha.tipo] }}</p>
+        <h2 class="destaque-nome" id="titulo-destaque">{{ ficha.nome }}</h2>
+        <p class="destaque-texto">{{ grupos(ficha) }}</p>
+        <p class="destaque-texto">{{ ficha.exercicios.length | i18nPlural: plural }} · {{ ultimaVez(ficha) }}</p>
+        <a class="botao botao-escuro" [routerLink]="['/treino', ficha.id]">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4l13 8-13 8z" /></svg>
+          Começar treino
+        </a>
+      </section>
+    } @else {
+      <section class="boas-vindas">
+        <h2>Bem-vindo ao RepLog</h2>
+        <p class="texto-secundario">
+          Cria as tuas fichas de treino (ou usa as de exemplo) e regista cada série no ginásio.
+          A app mostra-te sempre o que fizeste da última vez.
+        </p>
+        <a routerLink="/fichas" class="botao botao-principal">Criar fichas</a>
+      </section>
+    }
+
+    <!-- Nem sempre se segue o plano: treino sem ficha, com os exercícios escolhidos durante o treino -->
+    @if (!emCurso()) {
+      <a class="botao" [routerLink]="['/treino', treinoLivre]">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+        Começar treino vazio
       </a>
-    </section>
-  } @else {
-    <section class="boas-vindas">
-      <h2>Bem-vindo ao RepLog</h2>
-      <p class="texto-secundario">
-        Cria as tuas fichas de treino (ou usa as de exemplo) e regista cada série no ginásio.
-        A app mostra-te sempre o que fizeste da última vez.
-      </p>
-      <a routerLink="/fichas" class="botao botao-principal">Criar fichas</a>
-    </section>
-  }
+    }
+  </div>
 
   <section class="semana" aria-labelledby="titulo-semana">
     <h2 id="titulo-semana" class="subtitulo">Esta semana</h2>
