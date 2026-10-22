@@ -6,6 +6,7 @@
     "start": "ng serve",
     "build": "ng build",
     "build:pages": "ng build --base-href /projeto-angular/",
+    "tipos:bd": "supabase gen types typescript --linked --schema public --workdir .. > src/app/modelos/base-de-dados.ts",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },
@@ -19,6 +20,7 @@
     "@angular/platform-browser": "^22.2.0",
     "@angular/router": "^22.2.0",
     "@angular/service-worker": "^22.2.3",
+    "@supabase/supabase-js": "^2.118.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
   },
