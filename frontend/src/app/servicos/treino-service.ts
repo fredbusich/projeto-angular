@@ -16,7 +16,8 @@ type LinhaTreino = Tables<'treinos'> & {
 
 // Treinos: o que está a decorrer agora e o histórico dos que já terminaram.
 //
-// - O histórico está na base de dados (tabelas treinos, treino_exercicios e series).
+// - O histórico está na base de dados (tabelas treinos, treino_exercicios e series), com uma
+//   cópia no aparelho que aparece logo ao abrir a app (também sem rede) e sai ao sair da conta.
 // - O treino em curso fica só no aparelho (localStorage), para se poder treinar sem rede.
 // - Um treino terminado vai primeiro para a lista "por enviar" do aparelho e é enviado logo a
 //   seguir. Sem rede, fica lá e é enviado quando ela voltar. Como o id é criado na app, um envio
@@ -30,8 +31,11 @@ export class TreinoService {
   private readonly estadoCarga = signal<EstadoDados>('a-carregar');
   private readonly aEnviar = signal(false);
   private readonly erroAoEnviar = signal('');
+  private readonly soCopia = signal(false);
 
   readonly estado = this.estadoCarga.asReadonly();
+  // true: a base de dados não respondeu e o histórico é a cópia do aparelho
+  readonly semLigacao = this.soCopia.asReadonly();
   readonly enviando = this.aEnviar.asReadonly();
   readonly erroEnvio = this.erroAoEnviar.asReadonly();
   readonly quantosPorEnviar = computed(() => this.porEnviar().length);
@@ -62,8 +66,15 @@ export class TreinoService {
       const id = this.auth.idUtilizador();
       untracked(() => this.mudarDeUtilizador(id));
     });
-    // Quando a rede volta, envia o que ficou por enviar
-    window.addEventListener('online', () => this.enviarPendentes());
+    // Quando a rede volta: troca a cópia pelo histórico da base de dados e envia o que ficou por
+    // enviar (o carregar() também envia, quando acaba)
+    window.addEventListener('online', () => {
+      if (this.soCopia()) {
+        this.carregar();
+      } else {
+        this.enviarPendentes();
+      }
+    });
   }
 
   // Também é chamado pelo botão "Tentar outra vez" das páginas
@@ -72,7 +83,10 @@ export class TreinoService {
     if (!id) {
       return;
     }
-    this.estadoCarga.set('a-carregar');
+    // Com a cópia do aparelho no ecrã, não volta a "a carregar": o histórico atualiza-se quando chegar
+    if (this.estadoCarga() !== 'pronto') {
+      this.estadoCarga.set('a-carregar');
+    }
     // Um só pedido traz os treinos, os exercícios de cada treino e as séries de cada exercício
     const consulta = this.supabase.cliente
       .from('treinos')
@@ -85,13 +99,20 @@ export class TreinoService {
     this.supabase.pedido(consulta).subscribe({
       next: (linhas) => {
         if (id === this.idUtilizador) { // entretanto pode ter entrado outra conta
-          this.guardados.set(linhas.map(treinoDaBaseDeDados));
+          this.definirGuardados(linhas.map(treinoDaBaseDeDados));
           this.estadoCarga.set('pronto');
+          this.soCopia.set(false);
           this.enviarPendentes();
         }
       },
       error: () => {
-        if (id === this.idUtilizador) {
+        if (id !== this.idUtilizador) {
+          return;
+        }
+        // Havia cópia: continua a aparecer, com o aviso "sem ligação". Não havia: mostra o erro.
+        if (this.estadoCarga() === 'pronto') {
+          this.soCopia.set(true);
+        } else {
           this.estadoCarga.set('erro');
         }
       },
@@ -200,7 +221,7 @@ export class TreinoService {
     const consulta = this.supabase.cliente.from('treinos').delete().eq('id', id);
     return this.supabase.pedido(consulta).pipe(
       map(() => {
-        this.guardados.update((treinos) => treinos.filter((treino) => treino.id !== id));
+        this.definirGuardados(this.guardados().filter((treino) => treino.id !== id));
       }),
     );
   }
@@ -233,7 +254,9 @@ export class TreinoService {
             return;
           }
           this.gravarPorEnviar(this.porEnviar().filter((t) => t.id !== treino.id));
-          this.guardados.update((guardados) => (guardados.some((t) => t.id === treino.id) ? guardados : [treino, ...guardados]));
+          if (!this.guardados().some((t) => t.id === treino.id)) {
+            this.definirGuardados([treino, ...this.guardados()]);
+          }
         },
         complete: () => {
           this.aEnviar.set(false);
@@ -349,12 +372,19 @@ export class TreinoService {
   });
 
   // Entrou outra pessoa (ou saiu): o treino em curso e os por enviar são os dela, guardados no
-  // aparelho numa chave por utilizador; o histórico vem da base de dados
+  // aparelho numa chave por utilizador. O histórico vem da base de dados; até chegar, aparece a
+  // cópia guardada da última vez. Quem saiu perde a cópia do histórico, mas o treino em curso e
+  // os por enviar ficam (ainda não estão na base de dados).
   private mudarDeUtilizador(id: string | null): void {
+    if (this.idUtilizador && this.idUtilizador !== id) {
+      this.armazenamento.apagar(this.chave('treinos'));
+    }
     this.idUtilizador = id;
-    this.guardados.set([]);
     this.erroAoEnviar.set('');
-    this.estadoCarga.set('a-carregar');
+    this.soCopia.set(false);
+    const copia = id ? this.armazenamento.ler<Treino[] | null>(this.chave('treinos'), null) : null;
+    this.guardados.set(copia ?? []);
+    this.estadoCarga.set(copia ? 'pronto' : 'a-carregar');
     this.emCurso.set(id ? this.armazenamento.ler<Treino | null>(this.chave('treino-em-curso'), null) : null);
     this.porEnviar.set(id ? this.armazenamento.ler<Treino[]>(this.chave('treinos-por-enviar'), []) : []);
     this.carregar();
@@ -393,6 +423,12 @@ export class TreinoService {
     } else {
       this.armazenamento.apagar(this.chave('treino-em-curso'));
     }
+  }
+
+  // Muda o histórico guardado e a cópia no aparelho
+  private definirGuardados(treinos: Treino[]): void {
+    this.guardados.set(treinos);
+    this.armazenamento.guardar(this.chave('treinos'), treinos);
   }
 
   private gravarPorEnviar(treinos: Treino[]): void {

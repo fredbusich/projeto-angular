@@ -6,6 +6,12 @@
       <app-cabecalho [menuAberto]="menuAberto()" (abrirMenu)="abrirMenu()" />
 
       <main class="pagina">
+        @if (semLigacao()) {
+          <p class="sem-ligacao" role="status">
+            Sem ligação: estás a ver os dados guardados neste aparelho. Os treinos que terminares
+            são enviados quando a rede voltar.
+          </p>
+        }
         <!-- Aqui aparece a página da rota ativa (Início, Fichas, Histórico…) -->
         <router-outlet />
       </main>

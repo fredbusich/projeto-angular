@@ -125,7 +125,12 @@ As funções correm com as permissões de quem as chama (*security invoker*), po
 
 **Treinos por enviar:** "Terminar e guardar" põe o treino numa lista no aparelho e envia-o logo a seguir. Sem rede, fica lá (com a etiqueta "Por enviar" no histórico) e é enviado quando a rede voltar (evento `online` do navegador), ao abrir a app, ou no botão "Enviar agora" do Histórico. Um treino que falhe não impede os outros de seguir.
 
-**Treinar sem rede:** o treino em curso está no aparelho, por isso abre mesmo sem rede. Para começar um treino novo é preciso o histórico (dá as cargas da última vez) e a ficha.
+**Treinar sem rede (passo 15):** no ginásio pode não haver rede, e a app tem de abrir na mesma.
+- **A sessão** é lida do aparelho no arranque, sem esperar pela rede. O token de acesso do Supabase dura 1 hora; sem rede e com o token expirado, o `getSession()` tentava renová-lo durante uns 25 segundos e acabava sem sessão, e a app ia parar à página de entrar. Agora a app abre logo e o cliente renova o token quando a rede voltar. Só sai da conta quando o Supabase avisa que a sessão terminou mesmo (`SIGNED_OUT`).
+- **As fichas e o histórico** têm uma cópia no aparelho (por utilizador), que aparece logo ao abrir a app e é trocada pelos dados da base de dados quando estes chegam. Se a base de dados não responder, fica a cópia e aparece o aviso "Sem ligação: estás a ver os dados guardados neste aparelho". Quando a rede volta (evento `online`), a app vai buscar os dados outra vez. Ao sair da conta, a cópia sai do aparelho; o treino em curso e os treinos por enviar ficam, porque ainda não estão na base de dados.
+- **O treino em curso** está sempre no aparelho, e os treinos terminados sem rede ficam "por enviar" (ver acima).
+
+**Porquê uma cópia na app e não no service worker:** o plano era o service worker guardar as respostas do Supabase (como faz com a ExerciseDB). Ficou de fora por duas razões: o service worker guarda por endereço e não sabe de quem são os dados, por isso ficariam no aparelho depois de sair da conta; e, sem rede e com o token expirado, o pedido só sai depois daqueles 25 segundos a tentar renovar o token. Com a cópia na app, os dados aparecem logo e saem do aparelho ao sair da conta.
 
 **Importar:** se o aparelho ainda tiver fichas ou treinos da fase 1, aparece um aviso no Início: "Encontrámos 3 fichas e 5 treinos guardados neste aparelho… Queres importá-los para a tua conta?". As fichas são criadas uma a uma e cada uma sai do aparelho logo a seguir (se a rede falhar a meio, ao tentar outra vez continua onde parou); os treinos vão para a lista "por enviar", com um id novo e o id da ficha nova.
 
@@ -182,7 +187,7 @@ projeto-angular/
 | 12 | `supabase` | SQL das tabelas, RLS e funções (aplicado com a Supabase CLI); `@supabase/supabase-js`, `environment.ts`, `SupabaseService`, `AuthService` |
 | 13 | `autenticacao` | Páginas de entrar, registar e recuperar a palavra-passe; guards; layout sem sessão; "Sair" no menu; configuração da autenticação no painel |
 | 14 | `dados-supabase` | `FichaService` e `TreinoService` na base de dados; estados a carregar/erro; treinos por enviar; importar os dados do aparelho |
-| 15 | `fase2-acabamento` | Sem rede com o Supabase (service worker), README, planeamento, publicação |
+| 15 | `fase2-acabamento` | Sem rede com o Supabase (sessão lida do aparelho, cópia das fichas e do histórico, aviso "sem ligação"), README, planeamento, publicação |
 
 ## 11. Riscos e cuidados
 
@@ -190,3 +195,4 @@ projeto-angular/
 - **Emails de confirmação:** o serviço de email incluído no Supabase envia poucos emails por hora. Criar as contas de teste e de demonstração com antecedência; se for preciso, desligar a confirmação durante o desenvolvimento (decisão no passo 13).
 - **Testes com sessão:** o login passa pelos servidores do Supabase, por isso o Claude não cria contas nem entra por ti; és tu que entras no navegador de pré-visualização e os testes continuam a partir daí.
 - **Dados da fase 1:** a importação só corre quando o utilizador aceita, e os dados só saem do aparelho depois de gravados na conta.
+- **Espaço no aparelho:** a cópia do histórico cresce com os treinos (uns poucos kB cada). O `localStorage` aceita cerca de 5 MB; se encher, a cópia deixa de ser atualizada, mas a app continua a funcionar com a base de dados.
