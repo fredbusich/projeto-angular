@@ -1,0 +1,46 @@
+@if (enviado()) {
+  <app-cartao-auth titulo="Vê o teu email">
+    <!-- A mensagem não diz se o email tem conta: assim ninguém descobre que emails estão registados -->
+    <p class="mensagem-ok" role="status">
+      Se existir uma conta com <strong>{{ email.value }}</strong>, enviámos um link para escolheres uma palavra-passe nova.
+    </p>
+    <a routerLink="/entrar" class="botao">Voltar a entrar</a>
+  </app-cartao-auth>
+} @else {
+  <app-cartao-auth titulo="Recuperar a palavra-passe" subtitulo="Escreve o email da tua conta e enviamos um link para escolheres uma nova.">
+    <form class="form-auth" [formGroup]="formulario" (ngSubmit)="enviar()" novalidate>
+      <div class="campo-auth">
+        <label class="rotulo" for="email">Email</label>
+        <input
+          id="email"
+          class="campo"
+          type="email"
+          inputmode="email"
+          autocomplete="email"
+          formControlName="email"
+          [attr.aria-invalid]="mostrarErro(email)"
+          aria-describedby="erro-email"
+        />
+        @if (mostrarErro(email)) {
+          <p id="erro-email" class="erro-campo">
+            @if (email.hasError('required')) {
+              Escreve o teu email.
+            } @else {
+              Este email não parece válido.
+            }
+          </p>
+        }
+      </div>
+
+      @if (erro()) {
+        <p class="erro-geral" role="alert">{{ erro() }}</p>
+      }
+
+      <button type="submit" class="botao botao-principal" [disabled]="formulario.invalid || aEnviar()">
+        {{ aEnviar() ? 'A enviar…' : 'Enviar o link' }}
+      </button>
+    </form>
+
+    <p class="ligacoes-auth texto-secundario"><a routerLink="/entrar">Voltar a entrar</a></p>
+  </app-cartao-auth>
+}

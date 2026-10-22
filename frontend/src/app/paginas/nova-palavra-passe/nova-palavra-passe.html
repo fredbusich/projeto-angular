@@ -1,0 +1,73 @@
+<h1 class="pagina-titulo">Palavra-passe nova</h1>
+
+@if (mudada()) {
+  <div class="form-auth">
+    <p class="mensagem-ok" role="status">A palavra-passe foi mudada. Na próxima vez, entra com a nova.</p>
+    <a routerLink="/" class="botao botao-principal">Ir para o Início</a>
+  </div>
+} @else {
+  <p class="texto-secundario explicacao">
+    @if (emRecuperacao()) {
+      Chegaste pelo link do email: escolhe uma palavra-passe nova para a tua conta.
+    } @else {
+      Escolhe a palavra-passe nova para a tua conta.
+    }
+  </p>
+
+  <form class="form-auth" [formGroup]="formulario" (ngSubmit)="guardar()" novalidate>
+    <div class="campo-auth">
+      <label class="rotulo" for="palavra-passe">Palavra-passe nova</label>
+      <div class="campo-palavra-passe">
+        <input
+          id="palavra-passe"
+          class="campo"
+          [type]="mostrarPalavraPasse() ? 'text' : 'password'"
+          autocomplete="new-password"
+          formControlName="palavraPasse"
+          [attr.aria-invalid]="mostrarErro(formulario.controls.palavraPasse)"
+          aria-describedby="ajuda-palavra-passe"
+        />
+        <button type="button" class="botao-mostrar" [attr.aria-pressed]="mostrarPalavraPasse()" (click)="mostrarPalavraPasse.set(!mostrarPalavraPasse())">
+          {{ mostrarPalavraPasse() ? 'Esconder' : 'Mostrar' }}
+        </button>
+      </div>
+      @if (mostrarErro(formulario.controls.palavraPasse)) {
+        <p id="ajuda-palavra-passe" class="erro-campo">
+          @if (formulario.controls.palavraPasse.hasError('required')) {
+            Escolhe uma palavra-passe.
+          } @else {
+            A palavra-passe precisa de pelo menos {{ minimo }} caracteres.
+          }
+        </p>
+      } @else {
+        <p id="ajuda-palavra-passe" class="ajuda-campo">Pelo menos {{ minimo }} caracteres.</p>
+      }
+    </div>
+
+    <div class="campo-auth">
+      <label class="rotulo" for="repetir">Repetir a palavra-passe</label>
+      <input
+        id="repetir"
+        class="campo"
+        [type]="mostrarPalavraPasse() ? 'text' : 'password'"
+        autocomplete="new-password"
+        formControlName="repetir"
+        [attr.aria-invalid]="mostrarErro(formulario.controls.repetir) || diferentes"
+        aria-describedby="erro-repetir"
+      />
+      @if (mostrarErro(formulario.controls.repetir)) {
+        <p id="erro-repetir" class="erro-campo">Repete a palavra-passe.</p>
+      } @else if (diferentes) {
+        <p id="erro-repetir" class="erro-campo">As duas palavras-passe não são iguais.</p>
+      }
+    </div>
+
+    @if (erro()) {
+      <p class="erro-geral" role="alert">{{ erro() }}</p>
+    }
+
+    <button type="submit" class="botao botao-principal" [disabled]="formulario.invalid || aEnviar()">
+      {{ aEnviar() ? 'A guardar…' : 'Guardar a palavra-passe' }}
+    </button>
+  </form>
+}

@@ -50,16 +50,17 @@
         </a>
       </li>
     }
-
-    <!-- Progresso (gráficos e recordes) só chega na fase 2 -->
-    <li>
-      <span class="menu-item desativado" aria-disabled="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />
-        </svg>
-        Progresso
-        <span class="etiqueta">Fase 2</span>
-      </span>
-    </li>
   </ul>
+
+  <!-- A conta: quem entrou, mudar a palavra-passe e sair -->
+  <div class="menu-conta">
+    <p class="menu-email texto-secundario" [title]="email()">{{ email() }}</p>
+    <a class="menu-ligacao" routerLink="/nova-palavra-passe" (click)="fechar.emit()">Mudar a palavra-passe</a>
+    <button type="button" class="botao menu-sair" [disabled]="aSair()" (click)="sair()">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M15 4h4a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-4M10 17l5-5-5-5M15 12H3" />
+      </svg>
+      {{ aSair() ? 'A sair…' : 'Sair' }}
+    </button>
+  </div>
 </nav>

@@ -1,0 +1,62 @@
+<app-cartao-auth titulo="Entrar" subtitulo="As tuas fichas e o teu histórico, em qualquer aparelho.">
+  <form class="form-auth" [formGroup]="formulario" (ngSubmit)="entrar()" novalidate>
+    <div class="campo-auth">
+      <label class="rotulo" for="email">Email</label>
+      <input
+        id="email"
+        class="campo"
+        type="email"
+        inputmode="email"
+        autocomplete="email"
+        formControlName="email"
+        [attr.aria-invalid]="mostrarErro(formulario.controls.email)"
+        aria-describedby="erro-email"
+      />
+      @if (mostrarErro(formulario.controls.email)) {
+        <p id="erro-email" class="erro-campo">
+          @if (formulario.controls.email.hasError('required')) {
+            Escreve o teu email.
+          } @else {
+            Este email não parece válido.
+          }
+        </p>
+      }
+    </div>
+
+    <div class="campo-auth">
+      <div class="linha-titulo">
+        <label class="rotulo" for="palavra-passe">Palavra-passe</label>
+        <a routerLink="/recuperar-palavra-passe">Esqueci-me</a>
+      </div>
+      <div class="campo-palavra-passe">
+        <input
+          id="palavra-passe"
+          class="campo"
+          [type]="mostrarPalavraPasse() ? 'text' : 'password'"
+          autocomplete="current-password"
+          formControlName="palavraPasse"
+          [attr.aria-invalid]="mostrarErro(formulario.controls.palavraPasse)"
+          aria-describedby="erro-palavra-passe"
+        />
+        <button type="button" class="botao-mostrar" [attr.aria-pressed]="mostrarPalavraPasse()" (click)="mostrarPalavraPasse.set(!mostrarPalavraPasse())">
+          {{ mostrarPalavraPasse() ? 'Esconder' : 'Mostrar' }}
+        </button>
+      </div>
+      @if (mostrarErro(formulario.controls.palavraPasse)) {
+        <p id="erro-palavra-passe" class="erro-campo">Escreve a tua palavra-passe.</p>
+      }
+    </div>
+
+    <!-- Erro do Supabase (palavra-passe errada, email por confirmar, sem rede…) -->
+    @if (erro()) {
+      <p class="erro-geral" role="alert">{{ erro() }}</p>
+    }
+
+    <!-- [disabled]: não se submete um formulário inválido, nem duas vezes seguidas -->
+    <button type="submit" class="botao botao-principal" [disabled]="formulario.invalid || aEnviar()">
+      {{ aEnviar() ? 'A entrar…' : 'Entrar' }}
+    </button>
+  </form>
+
+  <p class="ligacoes-auth texto-secundario">Ainda não tens conta? <a routerLink="/registar">Criar conta</a></p>
+</app-cartao-auth>

@@ -1,0 +1,14 @@
+<div class="fundo">
+  <section class="cartao" aria-labelledby="titulo-auth">
+    <p class="logo">
+      <span class="logo-marca"></span>
+      REPLOG
+    </p>
+    <h1 id="titulo-auth" class="titulo">{{ titulo }}</h1>
+    @if (subtitulo) {
+      <p class="subtitulo texto-secundario">{{ subtitulo }}</p>
+    }
+    <!-- Aqui entra o conteúdo que a página põe entre <app-cartao-auth> e </app-cartao-auth> -->
+    <ng-content />
+  </section>
+</div>

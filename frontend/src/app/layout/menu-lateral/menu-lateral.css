@@ -81,22 +81,31 @@
   color: var(--sobre-destaque);
 }
 
-.menu-item.desativado {
-  color: var(--texto-secundario);
-  cursor: default;
+/* ---------- A conta, no fundo do menu ---------- */
+.menu-conta {
+  margin-top: auto;
+  padding-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-top: 1px solid var(--linha);
 }
 
-.menu-item.desativado:hover {
-  background: none;
+.menu-email {
+  margin: 0;
+  overflow: hidden;
+  font-size: 14px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
-.etiqueta {
-  margin-left: auto;
-  padding: 2px 6px;
-  border: 1px solid var(--linha);
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
+.menu-ligacao {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.menu-sair {
+  width: 100%;
 }
 
 /* ---------- Atalho para o treino a decorrer ---------- */

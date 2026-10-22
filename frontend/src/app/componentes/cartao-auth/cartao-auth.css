@@ -1,0 +1,41 @@
+:host {
+  display: block;
+}
+
+/* O cartão fica ao centro do ecrã (no telemóvel ocupa a largura toda) */
+.fundo {
+  min-height: 100dvh;
+  padding: 24px 16px;
+  display: grid;
+  place-items: center;
+}
+
+.cartao {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.logo {
+  margin: 0 0 8px;
+}
+
+.titulo {
+  margin: 0;
+  font-size: 34px;
+}
+
+.subtitulo {
+  margin: -8px 0 0;
+}
+
+@media (min-width: 768px) {
+  .cartao {
+    padding: 32px;
+    border: 1px solid var(--linha);
+    border-radius: 20px;
+    background: var(--cartao);
+  }
+}
