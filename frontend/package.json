@@ -3,11 +3,17 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
+    "env": "node scripts/gerar-environment.mjs",
+    "prestart": "npm run env",
     "start": "ng serve",
+    "prebuild": "npm run env",
     "build": "ng build",
-    "build:pages": "ng build --base-href /projeto-angular/",
+    "prebuild:pages": "npm run env",
+    "build:pages": "ng build --configuration production --base-href /projeto-angular/",
     "tipos:bd": "supabase gen types typescript --linked --schema public --workdir .. > src/app/modelos/base-de-dados.ts",
+    "prewatch": "npm run env",
     "watch": "ng build --watch --configuration development",
+    "pretest": "npm run env",
     "test": "ng test"
   },
   "private": true,
