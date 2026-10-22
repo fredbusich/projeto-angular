@@ -1,7 +1,8 @@
 import { I18nPluralPipe } from '@angular/common';
-import { Component, HostListener, OnInit, signal } from '@angular/core';
+import { Component, HostListener, Signal, effect, signal, untracked } from '@angular/core';
 import { AbstractControl, FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { Observable } from 'rxjs';
 import { ListaExercicios } from '../../componentes/lista-exercicios/lista-exercicios';
 import { Painel } from '../../diretivas/painel';
 import { NomeExercicioPipe } from '../../pipes/nome-exercicio-pipe';
@@ -9,6 +10,7 @@ import { Exercicio, GrupoMuscular, NOMES_GRUPOS } from '../../modelos/exercicio'
 import { imagemDoExercicio } from '../../modelos/exercisedb';
 import { DadosFicha, ExercicioNaFicha, NOMES_TIPOS, TipoFicha } from '../../modelos/ficha';
 import { FichaService } from '../../servicos/ficha-service';
+import { EstadoDados } from '../../servicos/supabase-service';
 import { inteiro, naoSoEspacos } from '../../utils/validadores';
 
 // Os campos de um exercício dentro do formulário
@@ -27,7 +29,7 @@ type GrupoExercicio = FormGroup<{
   styleUrl: './ficha-form.css',
   templateUrl: './ficha-form.html',
 })
-export class FichaForm implements OnInit {
+export class FichaForm {
   protected readonly nomesTipos = NOMES_TIPOS;
   protected readonly tipos = Object.keys(NOMES_TIPOS) as TipoFicha[];
   protected readonly nomesGrupos = NOMES_GRUPOS;
@@ -45,9 +47,16 @@ export class FichaForm implements OnInit {
     exercicios: new FormArray<GrupoExercicio>([], Validators.required),
   });
 
-  protected modoEdicao = false;               // true em /fichas/:id/editar
-  protected idEmEdicao: string | null = null;  // id da ficha encontrada
-  protected naoEncontrada = false;
+  // O id do endereço /fichas/:id/editar (null em /fichas/nova)
+  private readonly idEmEdicao: string | null;
+  protected readonly modoEdicao: boolean;
+  // Para editar, a página espera que as fichas cheguem da base de dados
+  protected readonly estado: Signal<EstadoDados>;
+  protected readonly naoEncontrada = signal(false);
+  private preenchido = false;
+
+  protected readonly aGuardar = signal(false);
+  protected readonly erro = signal('');
 
   // Painel para escolher exercícios e ids dos que já estão na ficha (aparecem com ✓)
   protected readonly seletorAberto = signal(false);
@@ -55,28 +64,41 @@ export class FichaForm implements OnInit {
 
   constructor(
     private fichaService: FichaService,
-    private rota: ActivatedRoute,
+    rota: ActivatedRoute,
     private router: Router,
-  ) {}
+  ) {
+    this.idEmEdicao = rota.snapshot.paramMap.get('id');
+    this.modoEdicao = this.idEmEdicao !== null;
+    this.estado = this.fichaService.estado;
+
+    // effect: quando as fichas estiverem carregadas, preenche o formulário com a ficha a editar
+    // (uma vez só: se a lista mudar depois, não se perde o que já se escreveu)
+    effect(() => {
+      if (this.modoEdicao && this.estado() === 'pronto') {
+        untracked(() => this.preencher());
+      }
+    });
+  }
 
   // Atalho para a lista de exercícios do formulário
   protected get exercicios(): FormArray<GrupoExercicio> {
     return this.formulario.controls.exercicios;
   }
 
-  // OnInit: se o endereço tiver um id (/fichas/:id/editar), preenche o formulário com essa ficha
-  ngOnInit(): void {
-    const id = this.rota.snapshot.paramMap.get('id');
-    if (!id) {
+  protected tentarOutraVez(): void {
+    this.fichaService.carregar();
+  }
+
+  private preencher(): void {
+    if (this.preenchido || !this.idEmEdicao) {
       return;
     }
-    this.modoEdicao = true;
-    const ficha = this.fichaService.obter(id);
+    this.preenchido = true;
+    const ficha = this.fichaService.obter(this.idEmEdicao);
     if (!ficha) {
-      this.naoEncontrada = true;
+      this.naoEncontrada.set(true);
       return;
     }
-    this.idEmEdicao = id;
     this.formulario.patchValue({ nome: ficha.nome, tipo: ficha.tipo });
     ficha.exercicios.forEach((exercicio) => this.exercicios.push(this.criarGrupo(exercicio)));
     this.atualizarIdsEscolhidos();
@@ -141,6 +163,9 @@ export class FichaForm implements OnInit {
   // ---------- Guardar ----------
 
   protected guardar(): void {
+    if (this.aGuardar()) {
+      return; // já está a guardar (ex.: Enter carregado duas vezes)
+    }
     // Segurança extra: o botão já fica desativado, mas nunca se guarda um formulário inválido
     if (this.formulario.invalid) {
       this.formulario.markAllAsTouched();
@@ -160,12 +185,20 @@ export class FichaForm implements OnInit {
       })),
     };
 
-    if (this.idEmEdicao) {
-      this.fichaService.atualizar(this.idEmEdicao, dados);
-    } else {
-      this.fichaService.criar(dados);
-    }
-    this.router.navigate(['/fichas']);
+    // Só volta às fichas depois de a base de dados confirmar; se falhar, fica tudo como estava
+    // e aparece o erro por cima do botão
+    const pedido: Observable<unknown> = this.idEmEdicao
+      ? this.fichaService.atualizar(this.idEmEdicao, dados)
+      : this.fichaService.criar(dados);
+    this.aGuardar.set(true);
+    this.erro.set('');
+    pedido.subscribe({
+      next: () => this.router.navigate(['/fichas']),
+      error: (erro: Error) => {
+        this.aGuardar.set(false);
+        this.erro.set(erro.message);
+      },
+    });
   }
 
   // ---------- Auxiliares ----------

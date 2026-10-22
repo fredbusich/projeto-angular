@@ -1,37 +1,115 @@
-import { Injectable, computed, signal } from '@angular/core';
+import { Injectable, computed, effect, signal, untracked } from '@angular/core';
+import { EMPTY, Observable, catchError, concatMap, from, map, of } from 'rxjs';
+import { Tables } from '../modelos/base-de-dados';
+import { GrupoMuscular } from '../modelos/exercicio';
 import { Ficha } from '../modelos/ficha';
 import { ExercicioNoTreino, ResumoExercicio, ResumoSemana, Serie, TREINO_LIVRE, Treino } from '../modelos/treino';
 import { inicioDaSemana } from '../utils/datas';
-import { gerarId } from '../utils/gerar-id';
 import { ArmazenamentoService } from './armazenamento-service';
+import { AuthService } from './auth-service';
+import { EstadoDados, SupabaseService } from './supabase-service';
+
+// Uma linha de "treinos" com os exercícios e as séries, como vem do select('*, treino_exercicios(*, series(*))')
+type LinhaTreino = Tables<'treinos'> & {
+  treino_exercicios: (Tables<'treino_exercicios'> & { series: Tables<'series'>[] })[];
+};
 
 // Treinos: o que está a decorrer agora e o histórico dos que já terminaram.
+//
+// - O histórico está na base de dados (tabelas treinos, treino_exercicios e series).
+// - O treino em curso fica só no aparelho (localStorage), para se poder treinar sem rede.
+// - Um treino terminado vai primeiro para a lista "por enviar" do aparelho e é enviado logo a
+//   seguir. Sem rede, fica lá e é enviado quando ela voltar. Como o id é criado na app, um envio
+//   repetido não duplica o treino (a função guardar_treino ignora um id que já existe).
 @Injectable({ providedIn: 'root' })
 export class TreinoService {
-  private readonly chaveHistorico = 'treinos';
-  private readonly chaveEmCurso = 'treino-em-curso';
+  // Treinos que já estão na base de dados
+  private readonly guardados = signal<Treino[]>([]);
+  // Treinos terminados que ainda não chegaram à base de dados
+  private readonly porEnviar = signal<Treino[]>([]);
+  private readonly estadoCarga = signal<EstadoDados>('a-carregar');
+  private readonly aEnviar = signal(false);
+  private readonly erroAoEnviar = signal('');
 
-  // Treinos terminados, do mais recente para o mais antigo
-  private readonly historico = signal<Treino[]>([]);
-  readonly treinos = this.historico.asReadonly();
+  readonly estado = this.estadoCarga.asReadonly();
+  readonly enviando = this.aEnviar.asReadonly();
+  readonly erroEnvio = this.erroAoEnviar.asReadonly();
+  readonly quantosPorEnviar = computed(() => this.porEnviar().length);
 
-  // Treino a decorrer (ou null). Fica guardado para não se perder se a página recarregar.
+  // O histórico todo, do mais recente para o mais antigo (os por enviar também contam).
+  // Um treino pode estar nas duas listas se a resposta do envio se perdeu: aí conta uma vez só.
+  readonly treinos = computed(() => {
+    const guardados = this.guardados();
+    const ids = new Set(guardados.map((treino) => treino.id));
+    return [...this.porEnviar().filter((treino) => !ids.has(treino.id)), ...guardados].sort(
+      (a, b) => Date.parse(b.inicio) - Date.parse(a.inicio),
+    );
+  });
+
+  // Treino a decorrer (ou null). Fica guardado no aparelho para não se perder se a página recarregar.
   private readonly emCurso = signal<Treino | null>(null);
   readonly treinoEmCurso = this.emCurso.asReadonly();
 
-  constructor(private armazenamento: ArmazenamentoService) {
-    this.historico.set(this.armazenamento.ler<Treino[]>(this.chaveHistorico, []));
-    this.emCurso.set(this.armazenamento.ler<Treino | null>(this.chaveEmCurso, null));
+  private idUtilizador: string | null = null;
+
+  constructor(
+    private supabase: SupabaseService,
+    private auth: AuthService,
+    private armazenamento: ArmazenamentoService,
+  ) {
+    // effect: corre agora e sempre que muda quem tem a sessão (entrar, sair, outra conta)
+    effect(() => {
+      const id = this.auth.idUtilizador();
+      untracked(() => this.mudarDeUtilizador(id));
+    });
+    // Quando a rede volta, envia o que ficou por enviar
+    window.addEventListener('online', () => this.enviarPendentes());
+  }
+
+  // Também é chamado pelo botão "Tentar outra vez" das páginas
+  carregar(): void {
+    const id = this.idUtilizador;
+    if (!id) {
+      return;
+    }
+    this.estadoCarga.set('a-carregar');
+    // Um só pedido traz os treinos, os exercícios de cada treino e as séries de cada exercício
+    const consulta = this.supabase.cliente
+      .from('treinos')
+      .select('*, treino_exercicios(*, series(*))')
+      .eq('user_id', id)
+      .order('inicio', { ascending: false })
+      .order('ordem', { referencedTable: 'treino_exercicios' })
+      .order('numero', { referencedTable: 'treino_exercicios.series' });
+
+    this.supabase.pedido(consulta).subscribe({
+      next: (linhas) => {
+        if (id === this.idUtilizador) { // entretanto pode ter entrado outra conta
+          this.guardados.set(linhas.map(treinoDaBaseDeDados));
+          this.estadoCarga.set('pronto');
+          this.enviarPendentes();
+        }
+      },
+      error: () => {
+        if (id === this.idUtilizador) {
+          this.estadoCarga.set('erro');
+        }
+      },
+    });
   }
 
   obter(id: string): Treino | undefined {
-    return this.historico().find((treino) => treino.id === id);
+    return this.treinos().find((treino) => treino.id === id);
+  }
+
+  estaPorEnviar(id: string): boolean {
+    return this.porEnviar().some((treino) => treino.id === id);
   }
 
   // Cria um treino a partir de uma ficha, já com as cargas da última vez
   iniciar(ficha: Ficha): Treino {
     const treino: Treino = {
-      id: gerarId(),
+      id: crypto.randomUUID(), // o id definitivo: é com ele que o treino vai para a base de dados
       fichaId: ficha.id,
       nomeFicha: ficha.nome,
       inicio: new Date().toISOString(),
@@ -46,7 +124,7 @@ export class TreinoService {
   // Treino sem ficha: começa sem exercícios e vão-se acrescentando durante o treino
   iniciarVazio(): Treino {
     const treino: Treino = {
-      id: gerarId(),
+      id: crypto.randomUUID(),
       fichaId: TREINO_LIVRE,
       nomeFicha: 'Treino livre',
       inicio: new Date().toISOString(),
@@ -87,30 +165,92 @@ export class TreinoService {
     this.definirEmCurso(treino);
   }
 
-  // Passa o treino em curso para o histórico
+  // Passa o treino em curso para o histórico: primeiro para a lista "por enviar" (assim não se
+  // perde, mesmo sem rede) e logo a seguir para a base de dados
   terminar(): Treino | null {
     const treino = this.emCurso();
     if (!treino) {
       return null;
     }
     const terminado: Treino = { ...treino, fim: new Date().toISOString() };
-    this.gravarHistorico([terminado, ...this.historico()]);
+    this.gravarPorEnviar([...this.porEnviar(), terminado]);
     this.definirEmCurso(null);
+    this.enviarPendentes();
     return terminado;
+  }
+
+  // Treinos da fase 1 (que estavam só no aparelho) a importar para a conta: seguem o mesmo
+  // caminho de um treino terminado sem rede
+  adicionarPorEnviar(treinos: Treino[]): void {
+    this.gravarPorEnviar([...this.porEnviar(), ...treinos]);
+    this.enviarPendentes();
   }
 
   cancelar(): void {
     this.definirEmCurso(null);
   }
 
-  apagar(id: string): void {
-    this.gravarHistorico(this.historico().filter((treino) => treino.id !== id));
+  apagar(id: string): Observable<void> {
+    // Ainda não foi enviado: basta tirá-lo do aparelho
+    if (this.estaPorEnviar(id)) {
+      this.gravarPorEnviar(this.porEnviar().filter((treino) => treino.id !== id));
+      return of(undefined);
+    }
+    // Os exercícios e as séries vão com ele (on delete cascade)
+    const consulta = this.supabase.cliente.from('treinos').delete().eq('id', id);
+    return this.supabase.pedido(consulta).pipe(
+      map(() => {
+        this.guardados.update((treinos) => treinos.filter((treino) => treino.id !== id));
+      }),
+    );
+  }
+
+  // Envia os treinos por enviar, um de cada vez (concatMap). Cada um que chega à base de dados
+  // passa para os guardados. Se um falhar, os outros continuam; os que falharam ficam para a próxima.
+  enviarPendentes(): void {
+    const id = this.idUtilizador;
+    if (!id || this.aEnviar() || this.porEnviar().length === 0) {
+      return;
+    }
+    this.aEnviar.set(true);
+    let erro = '';
+    const lote = this.porEnviar();
+    from(lote)
+      .pipe(
+        concatMap((treino) =>
+          this.enviar(treino).pipe(
+            map(() => treino),
+            catchError((falha: Error) => {
+              erro = falha.message;
+              return EMPTY; // este fica por enviar; passa ao seguinte
+            }),
+          ),
+        ),
+      )
+      .subscribe({
+        next: (treino) => {
+          if (id !== this.idUtilizador) { // saiu entretanto: na próxima vez é reenviado sem duplicar
+            return;
+          }
+          this.gravarPorEnviar(this.porEnviar().filter((t) => t.id !== treino.id));
+          this.guardados.update((guardados) => (guardados.some((t) => t.id === treino.id) ? guardados : [treino, ...guardados]));
+        },
+        complete: () => {
+          this.aEnviar.set(false);
+          this.erroAoEnviar.set(erro);
+          // Chegaram treinos novos enquanto se enviava (terminou outro, ou importou)? Seguem já.
+          // Os que falharam agora não contam, para não ficar a tentar sem parar.
+          if (id === this.idUtilizador && this.porEnviar().some((treino) => !lote.includes(treino))) {
+            this.enviarPendentes();
+          }
+        },
+      });
   }
 
   // Séries feitas da última vez que se treinou este exercício (a coluna "anterior").
   // Os treinos em que o exercício ficou sem séries feitas não contam.
   ultimasSeries(exercicioId: string): Serie[] {
-    for (const treino of this.historico()) {
+    for (const treino of this.treinos()) {
       const exercicio = treino.exercicios.find((e) => e.exercicioId === exercicioId && e.series.some((s) => s.feita));
       if (exercicio) {
         return exercicio.series.filter((serie) => serie.feita);
@@ -122,7 +262,7 @@ export class TreinoService {
   // Maior carga já feita neste exercício (o recorde simples da fase 1).
   // Com "antesDe" (data ISO), só contam os treinos começados antes dessa data.
   maiorCarga(exercicioId: string, antesDe?: string): number {
-    const cargas = this.historico()
+    const cargas = this.treinos()
       .filter((treino) => !antesDe || treino.inicio < antesDe)
       .flatMap((treino) => treino.exercicios)
       .filter((exercicio) => exercicio.exercicioId === exercicioId)
@@ -177,7 +317,7 @@ export class TreinoService {
 
   // O treino mais recente feito com esta ficha (o histórico está do mais recente para o mais antigo)
   ultimoTreinoDaFicha(fichaId: string): Treino | undefined {
-    return this.historico().find((treino) => treino.fichaId === fichaId);
+    return this.treinos().find((treino) => treino.fichaId === fichaId);
   }
 
   // Sugere a ficha a fazer a seguir: uma que nunca foi feita ou, se não houver,
@@ -199,7 +339,7 @@ export class TreinoService {
   // computed: os números da semana recalculam-se sozinhos quando o histórico muda
   readonly resumoDaSemana = computed<ResumoSemana>(() => {
     const segunda = inicioDaSemana();
-    const daSemana = this.historico().filter((treino) => new Date(treino.inicio) >= segunda);
+    const daSemana = this.treinos().filter((treino) => new Date(treino.inicio) >= segunda);
     return {
       treinos: daSemana.length,
       volume: daSemana.reduce((total, treino) => total + this.volume(treino), 0),
@@ -208,17 +348,80 @@ export class TreinoService {
     };
   });
 
+  // Entrou outra pessoa (ou saiu): o treino em curso e os por enviar são os dela, guardados no
+  // aparelho numa chave por utilizador; o histórico vem da base de dados
+  private mudarDeUtilizador(id: string | null): void {
+    this.idUtilizador = id;
+    this.guardados.set([]);
+    this.erroAoEnviar.set('');
+    this.estadoCarga.set('a-carregar');
+    this.emCurso.set(id ? this.armazenamento.ler<Treino | null>(this.chave('treino-em-curso'), null) : null);
+    this.porEnviar.set(id ? this.armazenamento.ler<Treino[]>(this.chave('treinos-por-enviar'), []) : []);
+    this.carregar();
+  }
+
+  // "treino-em-curso" → "treino-em-curso-<id do utilizador>"
+  private chave(nome: string): string {
+    return `${nome}-${this.idUtilizador}`;
+  }
+
+  // A função guardar_treino recebe o treino em JSON, com os nomes da app (ver a migração 4)
+  private enviar(treino: Treino): Observable<string> {
+    const consulta = this.supabase.cliente.rpc('guardar_treino', {
+      p_treino: {
+        id: treino.id,
+        fichaId: treino.fichaId,
+        nomeFicha: treino.nomeFicha,
+        inicio: treino.inicio,
+        fim: treino.fim,
+        exercicios: treino.exercicios.map((exercicio) => ({
+          exercicioId: exercicio.exercicioId,
+          nome: exercicio.nome,
+          grupo: exercicio.grupo,
+          notas: exercicio.notas ?? null,
+          series: exercicio.series.map((serie) => ({ ...serie })),
+        })),
+      },
+    });
+    return this.supabase.pedido(consulta);
+  }
+
   private definirEmCurso(treino: Treino | null): void {
     this.emCurso.set(treino);
     if (treino) {
-      this.armazenamento.guardar(this.chaveEmCurso, treino);
+      this.armazenamento.guardar(this.chave('treino-em-curso'), treino);
     } else {
-      this.armazenamento.apagar(this.chaveEmCurso);
+      this.armazenamento.apagar(this.chave('treino-em-curso'));
     }
   }
 
-  private gravarHistorico(treinos: Treino[]): void {
-    this.historico.set(treinos);
-    this.armazenamento.guardar(this.chaveHistorico, treinos);
+  private gravarPorEnviar(treinos: Treino[]): void {
+    this.porEnviar.set(treinos);
+    this.armazenamento.guardar(this.chave('treinos-por-enviar'), treinos);
   }
+}
+
+// Da base de dados (snake_case, três tabelas) para o modelo da app (camelCase, tudo junto).
+// As datas passam pelo toISOString() para ficarem no mesmo formato das criadas na app
+// (a base de dados escreve "+00:00" em vez de "Z"), porque há comparações entre elas.
+function treinoDaBaseDeDados(linha: LinhaTreino): Treino {
+  return {
+    id: linha.id,
+    fichaId: linha.ficha_id ?? TREINO_LIVRE, // treino livre, ou a ficha foi apagada
+    nomeFicha: linha.nome_ficha,
+    inicio: new Date(linha.inicio).toISOString(),
+    fim: new Date(linha.fim).toISOString(),
+    exercicios: linha.treino_exercicios.map((exercicio) => ({
+      exercicioId: exercicio.exercicio_id,
+      nome: exercicio.nome,
+      grupo: exercicio.grupo as GrupoMuscular, // o "check" da tabela só aceita os grupos da app
+      notas: exercicio.notas ?? undefined,
+      series: exercicio.series.map((serie) => ({
+        numero: serie.numero,
+        carga: serie.carga,
+        repeticoes: serie.repeticoes,
+        feita: serie.feita,
+      })),
+    })),
+  };
 }

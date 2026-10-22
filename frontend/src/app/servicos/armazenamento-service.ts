@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 
-// Guarda e lê dados no localStorage do navegador.
-// Na fase 2, quando houver base de dados, é aqui (e nos services que o usam) que se muda.
+// Guarda e lê dados no localStorage do navegador: o que é só deste aparelho (o tema, a língua,
+// o treino em curso e os treinos por enviar). As fichas e o histórico estão na base de dados.
 @Injectable({ providedIn: 'root' })
 export class ArmazenamentoService {
   private readonly prefixo = 'replog-';

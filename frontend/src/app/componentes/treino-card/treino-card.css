@@ -24,6 +24,18 @@
   text-transform: uppercase;
 }
 
+/* Treino terminado sem rede, ainda só no aparelho */
+.por-enviar {
+  margin-top: 6px;
+  padding: 3px 8px;
+  display: inline-block;
+  border: 1px solid var(--destaque-linha);
+  border-radius: 6px;
+  color: var(--destaque-linha);
+  font-size: 12px;
+  font-weight: 600;
+}
+
 /* ---------- Versão curta (Início) ---------- */
 .curto {
   display: flex;

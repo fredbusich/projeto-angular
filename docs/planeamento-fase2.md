@@ -83,9 +83,11 @@ Uma ficha são várias linhas (a ficha e os seus exercícios); um treino ainda m
 | Função | Faz |
 |---|---|
 | `guardar_ficha(...)` | Cria ou edita uma ficha e substitui a lista de exercícios |
-| `guardar_treino(...)` | Grava um treino terminado, com os exercícios e as séries |
+| `guardar_treino(...)` | Grava um treino terminado, com os exercícios e as séries. O id vem da app (`crypto.randomUUID()`, desde que o treino começa); se esse id já existir, não grava outra vez |
 
 As funções correm com as permissões de quem as chama (*security invoker*), por isso as regras de RLS também se aplicam lá dentro. Ler e apagar faz-se diretamente pelo cliente: ler uma ficha com os exercícios é um só pedido (`select('*, ficha_exercicios(*)')`), e apagar uma ficha apaga os exercícios em cascata.
+
+**Porquê o id do treino vem da app:** um treino terminado sem rede fica no aparelho e é enviado mais tarde. Se o envio for repetido (o treino ficou gravado, mas a resposta perdeu-se pelo caminho), a função vê que o id já existe (`on conflict do nothing`) e o treino não fica duplicado no histórico.
 
 ## 5. Autenticação
 
@@ -112,17 +114,20 @@ As funções correm com as permissões de quem as chama (*security invoker*), po
 
 | Peça | Fase 1 | Fase 2 |
 |---|---|---|
-| `SupabaseService` (novo) | — | Cria o cliente do Supabase uma vez, para a app toda |
-| `AuthService` (novo) | — | Sessão e utilizador; registar, entrar, sair, recuperar |
-| `FichaService` | `localStorage` | Tabelas `fichas` + `ficha_exercicios`; carrega ao entrar, limpa ao sair |
-| `TreinoService` | `localStorage` | Histórico na tabela `treinos` (+ filhas); o treino em curso continua no aparelho, numa chave por utilizador |
+| `SupabaseService` (novo) | — | Cria o cliente do Supabase uma vez, para a app toda. `pedido()` passa uma consulta a `Observable`, com os erros em português (`utils/erros-bd.ts`) |
+| `AuthService` (novo) | — | Sessão e utilizador; registar, entrar, sair, recuperar. `idUtilizador` (um `computed`) só muda quando muda a pessoa |
+| `FichaService` | `localStorage` | Tabelas `fichas` + `ficha_exercicios`; carrega ao entrar e esvazia ao sair (um `effect` segue o `idUtilizador`). Criar, editar e apagar devolvem `Observable`: a página espera pela resposta e mostra o erro, se houver |
+| `TreinoService` | `localStorage` | Histórico nas tabelas `treinos`, `treino_exercicios` e `series`; o treino em curso e os treinos por enviar ficam no aparelho, numa chave por utilizador |
+| `ImportacaoService` (novo) | — | Passa as fichas e os treinos da fase 1 (que estavam no aparelho) para a conta |
 | `ArmazenamentoService` | Tudo | Só o que é do aparelho: tema, língua, treino em curso, treinos por enviar |
-| Páginas Fichas, Treino, Histórico, Início | Dados imediatos | Estados **a carregar** e **erro** (agora os dados vêm da rede), como na lista de exercícios |
-| Ids | Gerados na app (`gerarId`) | Gerados pela base de dados (`uuid`) |
+| Páginas Fichas, Treino, Histórico, Início, Exercícios, formulário da ficha | Dados imediatos | Estados **a carregar** e **erro**, com "Tentar outra vez", como na lista de exercícios; botões "A guardar…" / "A apagar…" enquanto a base de dados não responde |
+| Ids | Gerados na app (`gerarId`) | Fichas: gerados pela base de dados (`uuid`). Treinos: `crypto.randomUUID()` na app (ver a secção 4) |
 
-**Treinos por enviar:** se não houver rede ao carregar em "Terminar e guardar", o treino fica numa lista no aparelho e é enviado automaticamente quando a rede voltar (e há um botão para tentar já).
+**Treinos por enviar:** "Terminar e guardar" põe o treino numa lista no aparelho e envia-o logo a seguir. Sem rede, fica lá (com a etiqueta "Por enviar" no histórico) e é enviado quando a rede voltar (evento `online` do navegador), ao abrir a app, ou no botão "Enviar agora" do Histórico. Um treino que falhe não impede os outros de seguir.
 
-**Importar:** se o aparelho ainda tiver fichas ou treinos da fase 1, aparece um aviso no Início: "Encontrámos 3 fichas e 5 treinos neste aparelho. Importar para a tua conta?". Depois de importados, saem do aparelho.
+**Treinar sem rede:** o treino em curso está no aparelho, por isso abre mesmo sem rede. Para começar um treino novo é preciso o histórico (dá as cargas da última vez) e a ficha.
+
+**Importar:** se o aparelho ainda tiver fichas ou treinos da fase 1, aparece um aviso no Início: "Encontrámos 3 fichas e 5 treinos guardados neste aparelho… Queres importá-los para a tua conta?". As fichas são criadas uma a uma e cada uma sai do aparelho logo a seguir (se a rede falhar a meio, ao tentar outra vez continua onde parou); os treinos vão para a lista "por enviar", com um id novo e o id da ficha nova.
 
 ## 7. Requisitos que a fase 2 reforça
 
@@ -146,11 +151,11 @@ O SQL é aplicado ao projeto com a **Supabase CLI** (instalada no PC, comando `s
 | `supabase db lint` | Verifica as funções contra as tabelas reais (tipos, colunas) |
 | `npm run tipos:bd` (na pasta `frontend`) | Gera `modelos/base-de-dados.ts`: os tipos TypeScript das tabelas e funções, lidos da base de dados (`supabase gen types`). Correr de novo depois de cada migração |
 
-As três migrações, por ordem: `…_tabelas.sql` (tabelas, regras e índices), `…_seguranca.sql` (RLS e permissões) e `…_funcoes.sql` (`guardar_ficha`, `guardar_treino`). Uma migração já aplicada não se altera: uma mudança é sempre uma migração nova.
+As migrações, por ordem: `…_tabelas.sql` (tabelas, regras e índices), `…_seguranca.sql` (RLS e permissões), `…_funcoes.sql` (`guardar_ficha`, `guardar_treino`) e `…_treino_com_id.sql` (passo 14: `guardar_treino` passa a aceitar o id do treino). Uma migração já aplicada não se altera: uma mudança é sempre uma migração nova, como esta quarta.
 
 A CLI também consegue correr uma cópia do Supabase no PC (`supabase start`), mas isso precisa do Docker; aqui trabalha-se diretamente com o projeto na nuvem.
 
-**Tamanho da app:** o cliente do Supabase faz a app inicial passar de 452 kB para 682 kB (165 kB comprimidos, o que viaja pela rede). Com as páginas de autenticação fica em 704 kB. O aviso do `angular.json` subiu de 500 kB para 750 kB; o limite de erro continua em 1 MB.
+**Tamanho da app:** o cliente do Supabase faz a app inicial passar de 452 kB para 682 kB (165 kB comprimidos, o que viaja pela rede). Com as páginas de autenticação fica em 704 kB, e com os dados no Supabase em 722 kB. O aviso do `angular.json` subiu de 500 kB para 750 kB; o limite de erro continua em 1 MB.
 
 ## 9. Estrutura de pastas (novidades)
 
@@ -158,14 +163,15 @@ A CLI também consegue correr uma cópia do Supabase no PC (`supabase start`), m
 projeto-angular/
 ├── supabase/
 │   ├── config.toml           configuração do projeto para a CLI
-│   └── migrations/           o SQL, por ordem: tabelas, segurança (RLS), funções
+│   └── migrations/           o SQL, por ordem: tabelas, segurança (RLS), funções, treino com id
 └── frontend/src/
     ├── environments/         environment.ts: URL e chave pública do Supabase
     └── app/
         ├── componentes/      + cartao-auth
         ├── guards/           sessao-guard, visitante-guard
         ├── paginas/          + entrar, registar, recuperar-palavra-passe, nova-palavra-passe
-        └── servicos/         + supabase-service, auth-service
+        ├── servicos/         + supabase-service, auth-service, importacao-service
+        └── utils/            + erros-auth, erros-bd (as mensagens de erro em português); sai o gerar-id
 ```
 
 ## 10. Plano de trabalho (um ramo e um PR por passo)

@@ -35,6 +35,11 @@ export class TreinoCard {
     return this.treinoService.seriesFeitas(this.treino);
   }
 
+  // Terminado sem rede: ainda só está neste aparelho
+  protected get porEnviar(): boolean {
+    return this.treinoService.estaPorEnviar(this.treino.id);
+  }
+
   // Só os exercícios com pelo menos uma série feita, cada um com a sua melhor série e se foi recorde
   protected get exercicios(): ResumoExercicio[] {
     return this.treinoService.resumoPorExercicio(this.treino);

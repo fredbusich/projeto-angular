@@ -70,6 +70,30 @@
   margin: 0;
 }
 
+/* ---------- Importar os dados da fase 1 ---------- */
+.importar {
+  margin-bottom: 20px;
+}
+
+section.importar {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border: 1px solid var(--destaque-linha);
+  border-radius: 20px;
+}
+
+section.importar p {
+  margin: 0;
+}
+
+.importar-botoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 /* ---------- Números da semana ---------- */
 .subtitulo {
   font-size: 22px;
