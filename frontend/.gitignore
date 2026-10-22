@@ -42,3 +42,8 @@ __screenshots__/
 # System files
 .DS_Store
 Thumbs.db
+
+# Variáveis de ambiente (a chave do Supabase): o modelo é o .env.example
+.env
+# Gerado a partir das variáveis de ambiente por scripts/gerar-environment.mjs
+/src/environments/environment.ts

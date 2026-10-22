@@ -37,9 +37,14 @@ jobs:
         run: npm ci
 
       # A app fica em https://fredbusich.github.io/projeto-angular/, por isso o base-href é /projeto-angular/
-      # (o script "build:pages" do package.json faz ng build --base-href /projeto-angular/)
+      # (o script "build:pages" do package.json faz ng build --configuration production --base-href /projeto-angular/).
+      # A chave do Supabase não está no repositório: vem dos Secrets (Settings → Secrets and variables → Actions)
+      # como variáveis de ambiente, e o scripts/gerar-environment.mjs escreve com elas o environment.ts.
       - name: Construir a versão de produção
         run: npm run build:pages
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
 
       # O GitHub Pages não conhece as rotas do Angular: ao abrir (ou recarregar) /projeto-angular/treino/livre
       # dava 404. Com uma cópia do index.html como 404.html, quem responde é a app, e o Router mostra a página certa.

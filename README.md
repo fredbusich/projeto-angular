@@ -78,19 +78,36 @@ As decisões da fase 2 estão em [`docs/planeamento-fase2.md`](docs/planeamento-
 
 É preciso ter o [Node.js](https://nodejs.org) 22 ou mais recente (foi usado o 24) e o npm.
 
-```bash
-git clone https://github.com/fredbusich/projeto-angular.git
-cd projeto-angular/frontend
-npm install
-npm start
-```
+1. Descarrega o projeto e instala as dependências:
 
-A app abre em http://localhost:4200 e usa o projeto Supabase indicado em `frontend/src/environments/environment.ts` (o URL e a chave **pública**, que são feitos para estar no código; a chave secreta nunca entra no repositório).
+   ```bash
+   git clone https://github.com/fredbusich/projeto-angular.git
+   cd projeto-angular/frontend
+   npm install
+   ```
+
+2. Cria o ficheiro `.env` a partir do modelo:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+   Preenche-o com o URL e a chave **pública** (*publishable*) do projeto Supabase. Estão no painel do Supabase, em *Project Settings → API Keys*.
+
+3. Arranca a app, que abre em http://localhost:4200:
+
+   ```bash
+   npm start
+   ```
+
+**Variáveis de ambiente:** a chave do Supabase não está no código nem no repositório. Antes do `npm start` e de cada build corre o `scripts/gerar-environment.mjs`, que escreve o `src/environments/environment.ts` a partir das variáveis `SUPABASE_URL` e `SUPABASE_KEY`: no computador vêm do `.env`, no GitHub Actions vêm dos Secrets do repositório. O `.env` e o `environment.ts` gerado não vão para o Git. Se faltar uma variável, ou se for posta a chave secreta, o script para e diz o que corrigir.
+
+A chave pública acaba dentro do JavaScript da app publicada, porque o navegador tem de a enviar ao Supabase em cada pedido: foi feita para isso. Quem protege os dados é o RLS da base de dados. A chave secreta (*service_role*) nunca entra na app.
 
 Para usar outro projeto Supabase:
 1. Instala a [Supabase CLI](https://supabase.com/docs/guides/local-development/cli/getting-started).
 2. Na pasta `projeto-angular`, corre `supabase login`, `supabase link --project-ref <ref do projeto>` e `supabase db push`.
-3. Põe o URL e a chave *publishable* desse projeto no `environment.ts`.
+3. Põe o URL e a chave *publishable* desse projeto no `.env`.
 4. No painel do Supabase, em *Authentication → URL Configuration*, junta `http://localhost:4200/**` às *Redirect URLs*.
 
 Para gerar a versão de produção, usa `npm run build`; os ficheiros ficam em `frontend/dist/frontend/browser`. O service worker só funciona nesta versão, não no `npm start`.
@@ -100,7 +117,7 @@ Para gerar a versão de produção, usa `npm run build`; os ficheiros ficam em `
 A app é publicada no **GitHub Pages** pelo **GitHub Actions** ([`.github/workflows/publicar.yml`](.github/workflows/publicar.yml)), sempre que há alterações na `main`:
 
 1. `npm ci` instala as dependências.
-2. `npm run build:pages` faz o `ng build --base-href /projeto-angular/`, porque a app fica dentro de `/projeto-angular/`.
+2. `npm run build:pages` gera o `environment.ts` a partir dos Secrets `SUPABASE_URL` e `SUPABASE_KEY` do repositório (*Settings → Secrets and variables → Actions*). Depois faz o `ng build --configuration production --base-href /projeto-angular/`, porque a app fica dentro de `/projeto-angular/`.
 3. Copia o `index.html` para `404.html`, para que abrir ou recarregar uma página interna (ex.: `/treino/livre`) mostre a app em vez de um erro 404.
 4. Publica a pasta `dist/frontend/browser`.
 
@@ -124,6 +141,9 @@ A app é publicada no **GitHub Pages** pelo **GitHub Actions** ([`.github/workfl
 | Router | `app.routes.ts`: 11 rotas e `**`, guards `sessaoGuard` (`CanActivateChildFn`) e `visitanteGuard` (`CanActivateFn`) em `guards/`, regresso à página pedida depois de entrar |
 | Reactive Forms | `paginas/ficha-form` (`FormGroup`, `FormControl`, `FormArray`, validadores próprios) e as páginas de conta (`Validators.email`, `minLength` e o validador de grupo `palavrasPasseIguais`) |
 | `OnInit` / `OnDestroy` | `ListaExercicios`, `Treino`, `TemporizadorDescanso`… (`OnDestroy` cancela pedidos e para temporizadores) |
+| Supabase: autenticação e base de dados | Contas com email e palavra-passe (`servicos/auth-service.ts`); fichas e treinos em 5 tabelas Postgres com RLS (`supabase/migrations/`, `servicos/ficha-service.ts`, `servicos/treino-service.ts`) |
+| Produção no GitHub Actions, servida no GitHub Pages | `.github/workflows/publicar.yml`: `ng build --configuration production` e publicação no GitHub Pages a cada alteração na `main` |
+| Variáveis de ambiente para a chave do Supabase | `frontend/.env` (fora do Git, modelo em `.env.example`) e Secrets do GitHub Actions; `frontend/scripts/gerar-environment.mjs` escreve com elas o `src/environments/environment.ts` |
 
 O planeamento da fase 1 está em [`docs/planeamento.md`](docs/planeamento.md) e o da fase 2 em [`docs/planeamento-fase2.md`](docs/planeamento-fase2.md).
 
@@ -137,10 +157,12 @@ projeto-angular/
 │   ├── config.toml                  configuração para a Supabase CLI
 │   └── migrations/                  o SQL: tabelas, segurança (RLS) e funções
 └── frontend/                        a app Angular
+    ├── .env.example                 modelo do .env (SUPABASE_URL e SUPABASE_KEY)
+    ├── scripts/                     gerar-environment.mjs: o environment.ts a partir das variáveis
     ├── ngsw-config.json             o que o service worker guarda
     ├── public/                      ícones, manifesto e traduções
     └── src/
-        ├── environments/            URL e chave pública do Supabase
+        ├── environments/            environment.ts, gerado (fora do Git)
         └── app/
             ├── paginas/             inicio, fichas, ficha-form, treino, historico, exercicios,
             │                        entrar, registar, recuperar-palavra-passe, nova-palavra-passe
