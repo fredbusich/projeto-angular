@@ -289,6 +289,72 @@ textarea {
   font-size: 14px;
 }
 
+/* ---------- Formulários de conta (entrar, criar conta, palavra-passe) ---------- */
+.form-auth {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.campo-auth {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Ajuda por baixo de um campo, antes de haver erro */
+.ajuda-campo {
+  margin: 0;
+  color: var(--texto-secundario);
+  font-size: 14px;
+}
+
+/* Campo da palavra-passe com o botão "Mostrar" lá dentro, à direita */
+.campo-palavra-passe {
+  position: relative;
+}
+
+.campo-palavra-passe .campo {
+  padding-right: 100px;
+}
+
+.botao-mostrar {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--cartao-elevado);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+
+.erro-geral,
+.mensagem-ok {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: var(--raio-pequeno);
+  font-weight: 500;
+}
+
+.erro-geral {
+  border: 1px solid var(--erro);
+  color: var(--erro);
+}
+
+.mensagem-ok {
+  border: 1px solid var(--destaque-linha);
+}
+
+.ligacoes-auth {
+  margin: 0;
+  text-align: center;
+}
+
 /* ---------- Painel que sobe do fundo do ecrã (escolhas rápidas) ---------- */
 .painel-fundo {
   position: fixed;

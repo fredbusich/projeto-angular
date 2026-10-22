@@ -1,6 +1,7 @@
-import { Component, EventEmitter, HostListener, Input, Output, Signal } from '@angular/core';
+import { Component, EventEmitter, HostListener, Input, Output, Signal, computed, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { Treino } from '../../modelos/treino';
+import { AuthService } from '../../servicos/auth-service';
 import { TreinoService } from '../../servicos/treino-service';
 
 interface ItemMenu {
@@ -32,9 +33,22 @@ export class MenuLateral {
 
   // Quando há um treino a decorrer, o menu mostra um atalho para voltar a ele
   protected readonly treinoEmCurso: Signal<Treino | null>;
+  // O email de quem entrou, mostrado em baixo, junto ao "Sair"
+  protected readonly email = computed(() => this.auth.utilizador()?.email ?? '');
+  protected readonly aSair = signal(false);
 
-  constructor(treinoService: TreinoService) {
+  constructor(
+    treinoService: TreinoService,
+    private auth: AuthService,
+  ) {
     this.treinoEmCurso = treinoService.treinoEmCurso;
+  }
+
+  // Ao sair, o AuthService leva para a página de entrar
+  protected sair(): void {
+    this.aSair.set(true);
+    this.fechar.emit();
+    this.auth.sair().subscribe({ error: () => this.aSair.set(false) });
   }
 
   // A tecla Esc também fecha o menu

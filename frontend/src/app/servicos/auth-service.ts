@@ -1,4 +1,5 @@
 import { Injectable, computed, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { AuthError, Session } from '@supabase/supabase-js';
 import { Observable, from, map } from 'rxjs';
 import { traduzirErroAuth } from '../utils/erros-auth';
@@ -16,12 +17,19 @@ export class AuthService {
   // true depois de se abrir o link "mudar a palavra-passe" que vai por email
   readonly emRecuperacao = signal(false);
 
-  constructor(private supabase: SupabaseService) {
+  constructor(
+    private supabase: SupabaseService,
+    private router: Router,
+  ) {
     // Sempre que a sessão muda (entrar, sair, token renovado, link do email), o signal acompanha
     this.supabase.cliente.auth.onAuthStateChange((evento, sessao) => {
       this.sessao.set(sessao);
       if (evento === 'PASSWORD_RECOVERY') {
         this.emRecuperacao.set(true);
+      }
+      // Saiu (aqui ou noutro separador, ou a sessão expirou): volta à página de entrar
+      if (evento === 'SIGNED_OUT') {
+        this.router.navigate(['/entrar']);
       }
     });
   }
@@ -44,16 +52,27 @@ export class AuthService {
       password: palavraPasse,
       options: { emailRedirectTo: enderecoDaApp('entrar') },
     });
-    return this.resposta(pedido).pipe(map((dados) => ({ confirmarEmail: dados.session === null })));
+    return this.resposta(pedido).pipe(
+      map((dados) => {
+        this.sessao.set(dados.session); // sem confirmação de email, a sessão começa logo
+        return { confirmarEmail: dados.session === null };
+      }),
+    );
   }
 
   entrar(email: string, palavraPasse: string): Observable<void> {
     const pedido = this.supabase.cliente.auth.signInWithPassword({ email, password: palavraPasse });
-    return this.resposta(pedido).pipe(map(() => undefined));
+    return this.resposta(pedido).pipe(
+      map((dados) => {
+        // guarda já a sessão, para os guards a verem na navegação que vem a seguir
+        this.sessao.set(dados.session);
+      }),
+    );
   }
 
+  // scope 'local': termina a sessão neste aparelho, mesmo sem rede (no ginásio pode não haver)
   sair(): Observable<void> {
-    return from(this.supabase.cliente.auth.signOut()).pipe(
+    return from(this.supabase.cliente.auth.signOut({ scope: 'local' })).pipe(
       map(({ error }) => {
         if (error) {
           throw new Error(traduzirErroAuth(error));

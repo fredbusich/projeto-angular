@@ -96,17 +96,17 @@ As funções correm com as permissões de quem as chama (*security invoker*), po
 | `entrar` | Entrar (email + palavra-passe) | `required`, `Validators.email` |
 | `registar` | Criar conta | `Validators.email`, palavra-passe com 8+ caracteres, "repetir palavra-passe" igual (validador do grupo, nosso) |
 | `recuperar-palavra-passe` | Pedir o email para mudar a palavra-passe | `Validators.email` |
-| `nova-palavra-passe` | Escolher a nova (abre a partir do link do email) | as mesmas regras do registo |
+| `nova-palavra-passe` | Escolher a nova: a partir do link do email, ou com sessão, em "Mudar a palavra-passe" no menu | as mesmas regras do registo |
 
-**Guards** (`CanActivateFn`, pasta `guards/`):
-- `sessaoGuard` nas páginas da app: sem sessão → vai para `entrar` (e volta à página pedida depois de entrar).
-- `visitanteGuard` em `entrar` e `registar`: com sessão → vai para o Início.
+**Guards** (pasta `guards/`):
+- `sessaoGuard` (`CanActivateChildFn`) numa rota-mãe sem componente que agrupa todas as páginas da app: sem sessão → vai para `entrar?voltar=/a/pagina/pedida`, e depois de entrar volta lá.
+- `visitanteGuard` (`CanActivateFn`) em `entrar` e `registar`: com sessão → vai para o Início.
 
 **`AuthService`:** o utilizador atual num `signal` (o ecrã atualiza-se sozinho ao entrar e ao sair); `registar`, `entrar`, `sair`, `pedirRecuperacao`, `mudarPalavraPasse`. A sessão é lida no arranque (`provideAppInitializer`), antes de os guards decidirem. Os erros do Supabase são mostrados em português ("Email ou palavra-passe errados", "Este email já tem conta", "Confirma o email antes de entrar"…).
 
-**Layout:** sem sessão, só o cabeçalho com o logótipo (sem menu). Com sessão, o menu mostra o email do utilizador e o botão **Sair**.
+**Layout:** sem sessão, sem menu nem cabeçalho: só um cartão ao centro, o componente `CartaoAuth` (logótipo e título), onde cada página põe o seu formulário com `<ng-content>`. Com sessão, o layout de sempre; no fundo do menu ficam o email do utilizador, "Mudar a palavra-passe" e **Sair** (termina a sessão neste aparelho, mesmo sem rede). Sai do menu o item "Progresso", que estava lá à espera da fase 2.
 
-**No painel do Supabase** (configuração feita pelo dono do projeto): *Site URL* = `https://fredbusich.github.io/projeto-angular/`; *Redirect URLs* = esse e `http://localhost:4200/**`; confirmação de email ligada; emails em português (opcional).
+**No painel do Supabase** (configuração feita pelo dono do projeto): *Site URL* = `https://fredbusich.github.io/projeto-angular/`; *Redirect URLs* = `https://fredbusich.github.io/projeto-angular/**` e `http://localhost:4200/**`; confirmação de email ligada; emails em português (opcional).
 
 ## 6. O que muda na app
 
@@ -150,7 +150,7 @@ As três migrações, por ordem: `…_tabelas.sql` (tabelas, regras e índices),
 
 A CLI também consegue correr uma cópia do Supabase no PC (`supabase start`), mas isso precisa do Docker; aqui trabalha-se diretamente com o projeto na nuvem.
 
-**Tamanho da app:** o cliente do Supabase faz a app inicial passar de 452 kB para 682 kB (165 kB comprimidos, o que viaja pela rede). O aviso do `angular.json` subiu de 500 kB para 750 kB; o limite de erro continua em 1 MB.
+**Tamanho da app:** o cliente do Supabase faz a app inicial passar de 452 kB para 682 kB (165 kB comprimidos, o que viaja pela rede). Com as páginas de autenticação fica em 704 kB. O aviso do `angular.json` subiu de 500 kB para 750 kB; o limite de erro continua em 1 MB.
 
 ## 9. Estrutura de pastas (novidades)
 
@@ -162,6 +162,7 @@ projeto-angular/
 └── frontend/src/
     ├── environments/         environment.ts: URL e chave pública do Supabase
     └── app/
+        ├── componentes/      + cartao-auth
         ├── guards/           sessao-guard, visitante-guard
         ├── paginas/          + entrar, registar, recuperar-palavra-passe, nova-palavra-passe
         └── servicos/         + supabase-service, auth-service
