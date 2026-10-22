@@ -6,14 +6,14 @@ Nome provisório: **RepLog**.
 
 ## 1. As duas fases do projeto
 
-| | Fase 1 (este documento) | Fase 2 (enunciado ainda por sair) |
+| | Fase 1 (este documento) | Fase 2 ([`planeamento-fase2.md`](planeamento-fase2.md)) |
 |---|---|---|
-| Foco | Angular e TypeScript: a interface | Back-end e base de dados |
-| Pasta | `frontend/` | `backend/` |
-| Dados | API pública ExerciseDB + `localStorage` | Base de dados (a definir com o professor) |
-| Ideias | Fichas, treino em curso, histórico, exercícios | Login, recordes, gráficos de progresso, relatórios |
+| Foco | Angular e TypeScript: a interface | Base de dados e login |
+| Pasta | `frontend/` | `supabase/` (o SQL) + alterações no `frontend/` |
+| Dados | API pública ExerciseDB + `localStorage` | Supabase (Postgres + Auth) + API ExerciseDB |
+| O quê | Fichas, treino em curso, histórico, exercícios | Contas com email e palavra-passe, fichas e treinos guardados na conta |
 
-O repositório é o mesmo nas duas fases. Todo o acesso a dados fica nos **Services**: na fase 2 troca-se o `localStorage` pela base de dados sem mexer nos componentes.
+O repositório é o mesmo nas duas fases, e as duas são entregues juntas. Todo o acesso a dados fica nos **Services**: na fase 2 troca-se o `localStorage` pela base de dados sem mexer nos componentes.
 
 ## 2. Decisões de design
 
