@@ -24,26 +24,32 @@ export class AuthService {
     private supabase: SupabaseService,
     private router: Router,
   ) {
-    // Sempre que a sessão muda (entrar, sair, token renovado, link do email), o signal acompanha
+    // Sempre que a sessão muda (entrar, token renovado, link do email), o signal acompanha
     this.supabase.cliente.auth.onAuthStateChange((evento, sessao) => {
-      this.sessao.set(sessao);
       if (evento === 'PASSWORD_RECOVERY') {
         this.emRecuperacao.set(true);
       }
-      // Saiu (aqui ou noutro separador, ou a sessão expirou): volta à página de entrar
+      if (sessao) {
+        this.sessao.set(sessao);
+        return;
+      }
+      // Sem sessão: só conta quando o Supabase a terminou de facto (saiu aqui ou noutro
+      // separador, ou o servidor recusou a sessão). Sem rede para renovar o token, chega um
+      // INITIAL_SESSION sem sessão, mas a sessão continua guardada no aparelho: fica a mesma.
       if (evento === 'SIGNED_OUT') {
+        this.sessao.set(null);
         this.router.navigate(['/entrar']);
       }
     });
   }
 
-  // No arranque da app (provideAppInitializer): lê a sessão guardada antes de os guards decidirem
-  carregar(): Observable<void> {
-    return from(this.supabase.cliente.auth.getSession()).pipe(
-      map(({ data }) => {
-        this.sessao.set(data.session);
-      }),
-    );
+  // No arranque da app (provideAppInitializer): a sessão guardada no aparelho, antes de os guards
+  // decidirem. Não usa o getSession() porque, sem rede e com o token expirado (a app não foi
+  // aberta na última hora), ele tenta renová-lo durante uns 25 segundos e acaba sem sessão: no
+  // ginásio, a app ia parar à página de entrar. Assim abre logo; o cliente renova o token quando
+  // houver rede (TOKEN_REFRESHED) e, se a sessão já não for válida, termina-a (SIGNED_OUT).
+  carregar(): void {
+    this.sessao.set(this.supabase.sessaoGuardada());
   }
 
   // Cria a conta. Devolve se ainda é preciso confirmar o email (com a confirmação ligada, a

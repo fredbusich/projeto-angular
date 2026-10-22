@@ -12,6 +12,17 @@
   padding: 4px 16px 32px;
 }
 
+/* Aviso no topo da página quando a base de dados não responde */
+.sem-ligacao {
+  margin: 0 0 16px;
+  padding: 10px 14px;
+  border: 1px solid var(--linha);
+  border-radius: var(--raio-pequeno);
+  background: var(--cartao);
+  color: var(--texto-secundario);
+  font-size: 14px;
+}
+
 /* Desktop: menu numa coluna fixa à esquerda, conteúdo à direita */
 @media (min-width: 768px) {
   .app {

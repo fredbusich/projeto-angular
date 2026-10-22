@@ -4,6 +4,7 @@ import { Tables } from '../modelos/base-de-dados';
 import { GrupoMuscular } from '../modelos/exercicio';
 import { DadosFicha, Ficha, TipoFicha } from '../modelos/ficha';
 import { FICHAS_EXEMPLO } from '../modelos/fichas-exemplo';
+import { ArmazenamentoService } from './armazenamento-service';
 import { AuthService } from './auth-service';
 import { EstadoDados, SupabaseService } from './supabase-service';
 
@@ -13,39 +14,51 @@ type LinhaFicha = Tables<'fichas'> & { ficha_exercicios: Tables<'ficha_exercicio
 // Criar, ler, editar e apagar fichas de treino, nas tabelas fichas e ficha_exercicios do Supabase.
 // As fichas carregam-se ao entrar e esvaziam-se ao sair. Depois de cada gravação, o signal é
 // atualizado aqui mesmo, sem ir buscar a lista toda outra vez.
+//
+// Sem rede (no ginásio): fica uma cópia da lista no aparelho, que aparece logo ao abrir a app
+// e é atualizada quando a base de dados responde. Ao sair da conta, a cópia sai do aparelho.
 @Injectable({ providedIn: 'root' })
 export class FichaService {
   private readonly lista = signal<Ficha[]>([]);
   private readonly estadoCarga = signal<EstadoDados>('a-carregar');
+  private readonly soCopia = signal(false);
 
   // Os componentes leem estas versões "só de leitura"; só o service as muda
   readonly fichas = this.lista.asReadonly();
   readonly estado = this.estadoCarga.asReadonly();
+  // true: a base de dados não respondeu e a lista é a cópia do aparelho
+  readonly semLigacao = this.soCopia.asReadonly();
+
+  private idUtilizador: string | null = null;
 
   constructor(
     private supabase: SupabaseService,
     private auth: AuthService,
+    private armazenamento: ArmazenamentoService,
   ) {
     // effect: corre agora e sempre que muda quem tem a sessão (entrar, sair, outra conta)
     effect(() => {
       const id = this.auth.idUtilizador();
-      untracked(() => {
-        this.lista.set([]);
-        this.estadoCarga.set('a-carregar');
-        if (id) {
-          this.carregar();
-        }
-      });
+      untracked(() => this.mudarDeUtilizador(id));
+    });
+    // Quando a rede volta, troca a cópia pela lista da base de dados
+    window.addEventListener('online', () => {
+      if (this.soCopia()) {
+        this.carregar();
+      }
     });
   }
 
   // Também é chamado pelo botão "Tentar outra vez" das páginas
   carregar(): void {
-    const id = this.auth.idUtilizador();
+    const id = this.idUtilizador;
     if (!id) {
       return;
     }
-    this.estadoCarga.set('a-carregar');
+    // Com a cópia do aparelho no ecrã, não volta a "a carregar": a lista atualiza-se quando chegar
+    if (this.estadoCarga() !== 'pronto') {
+      this.estadoCarga.set('a-carregar');
+    }
     // Um só pedido traz as fichas e os exercícios de cada uma (as tabelas estão ligadas pela ficha_id).
     // O RLS já só deixa ver as fichas de quem pediu; o .eq() ajuda a base de dados a usar o índice.
     const consulta = this.supabase.cliente
@@ -57,13 +70,20 @@ export class FichaService {
 
     this.supabase.pedido(consulta).subscribe({
       next: (linhas) => {
-        if (id === this.auth.idUtilizador()) { // entretanto pode ter entrado outra conta
-          this.lista.set(linhas.map(fichaDaBaseDeDados));
+        if (id === this.idUtilizador) { // entretanto pode ter entrado outra conta
+          this.definirLista(linhas.map(fichaDaBaseDeDados));
           this.estadoCarga.set('pronto');
+          this.soCopia.set(false);
         }
       },
       error: () => {
-        if (id === this.auth.idUtilizador()) {
+        if (id !== this.idUtilizador) {
+          return;
+        }
+        // Havia cópia: continua a aparecer, com o aviso "sem ligação". Não havia: mostra o erro.
+        if (this.estadoCarga() === 'pronto') {
+          this.soCopia.set(true);
+        } else {
           this.estadoCarga.set('erro');
         }
       },
@@ -78,7 +98,7 @@ export class FichaService {
     return this.guardar(null, dados).pipe(
       map((id) => {
         const ficha: Ficha = { ...dados, id, criadaEm: new Date().toISOString() };
-        this.lista.update((fichas) => [...fichas, ficha]);
+        this.definirLista([...this.lista(), ficha]);
         return ficha;
       }),
     );
@@ -87,7 +107,7 @@ export class FichaService {
   atualizar(id: string, dados: DadosFicha): Observable<void> {
     return this.guardar(id, dados).pipe(
       map(() => {
-        this.lista.update((fichas) => fichas.map((ficha) => (ficha.id === id ? { ...ficha, ...dados } : ficha)));
+        this.definirLista(this.lista().map((ficha) => (ficha.id === id ? { ...ficha, ...dados } : ficha)));
       }),
     );
   }
@@ -97,7 +117,7 @@ export class FichaService {
     const consulta = this.supabase.cliente.from('fichas').delete().eq('id', id);
     return this.supabase.pedido(consulta).pipe(
       map(() => {
-        this.lista.update((fichas) => fichas.filter((ficha) => ficha.id !== id));
+        this.definirLista(this.lista().filter((ficha) => ficha.id !== id));
       }),
     );
   }
@@ -121,6 +141,28 @@ export class FichaService {
       p_exercicios: dados.exercicios.map((exercicio) => ({ ...exercicio })),
     });
     return this.supabase.pedido(consulta);
+  }
+
+  // Entrou outra pessoa (ou saiu). A cópia guardada da última vez aparece logo (também sem
+  // rede) e a base de dados atualiza-a a seguir. A cópia de quem saiu sai do aparelho.
+  private mudarDeUtilizador(id: string | null): void {
+    if (this.idUtilizador && this.idUtilizador !== id) {
+      this.armazenamento.apagar(`fichas-${this.idUtilizador}`);
+    }
+    this.idUtilizador = id;
+    this.soCopia.set(false);
+    const copia = id ? this.armazenamento.ler<Ficha[] | null>(`fichas-${id}`, null) : null;
+    this.lista.set(copia ?? []);
+    this.estadoCarga.set(copia ? 'pronto' : 'a-carregar');
+    this.carregar();
+  }
+
+  // Muda a lista e a cópia no aparelho
+  private definirLista(fichas: Ficha[]): void {
+    this.lista.set(fichas);
+    if (this.idUtilizador) {
+      this.armazenamento.guardar(`fichas-${this.idUtilizador}`, fichas);
+    }
   }
 }
 

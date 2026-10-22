@@ -13,7 +13,7 @@ Nome provisório: **RepLog**.
 | Dados | API pública ExerciseDB + `localStorage` | Supabase (Postgres + Auth) + API ExerciseDB |
 | O quê | Fichas, treino em curso, histórico, exercícios | Contas com email e palavra-passe, fichas e treinos guardados na conta |
 
-O repositório é o mesmo nas duas fases, e as duas são entregues juntas. Todo o acesso a dados fica nos **Services**: na fase 2 troca-se o `localStorage` pela base de dados sem mexer nos componentes.
+O repositório é o mesmo nas duas fases, e as duas são entregues juntas. Todo o acesso a dados fica nos **Services**: na fase 2 o `localStorage` deu lugar à base de dados dentro dos services, e as páginas só ganharam os estados "a carregar" e "erro" (os dados passaram a vir da rede).
 
 ## 2. Decisões de design
 
