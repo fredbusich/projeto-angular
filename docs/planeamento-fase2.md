@@ -8,7 +8,7 @@ O planeamento da fase 1 (interface, componentes, API de exercícios) continua em
 
 | Tema | Decisão | Porquê |
 |---|---|---|
-| Back-end | **Supabase**: base de dados Postgres, autenticação e API prontas | Indicação do professor. O "código do back-end" é o SQL (tabelas, regras de segurança, funções), guardado no repositório em `supabase/` |
+| Back-end | **Supabase**: base de dados Postgres, autenticação e API prontas | Indicação do professor. O "código do back-end" é o SQL (tabelas, regras de segurança, funções), guardado no repositório em `supabase/migrations/` e aplicado com a **Supabase CLI** |
 | Login | **Email e palavra-passe**, com o Supabase Auth: registar, entrar, sair, recuperar a palavra-passe | É o mais comum e não depende de serviços de terceiros (Google…) que podem falhar na demonstração |
 | Tabelas | **Relacionadas**: `fichas` → `ficha_exercicios`; `treinos` → `treino_exercicios` → `series` | Mostra modelação de base de dados a sério: chaves estrangeiras, regras e apagar em cascata |
 | Sem conta | **Login obrigatório**: sem sessão só se veem as páginas de entrar e registar | Os dados são sempre da conta; não há dois sítios para juntar |
@@ -131,12 +131,34 @@ As funções correm com as permissões de quem as chama (*security invoker*), po
 - **Services e DI:** `SupabaseService` injetado no `AuthService`, no `FichaService` e no `TreinoService`.
 - **Dados externos:** duas fontes, a ExerciseDB (`HttpClient`) e o Supabase (cliente oficial), ambas atrás de services e com estados de carregamento e erro.
 
-## 8. Estrutura de pastas (novidades)
+## 8. Supabase CLI e migrações
+
+O SQL é aplicado ao projeto com a **Supabase CLI** (instalada no PC, comando `supabase`), e não colado à mão no painel: assim, o que está no repositório é exatamente o que está na base de dados.
+
+| Comando | Para quê |
+|---|---|
+| `supabase init` | Criou a pasta `supabase/` (com o `config.toml`) |
+| `supabase migration new <nome>` | Cria um ficheiro `supabase/migrations/<data e hora>_<nome>.sql`; a data no nome dá a ordem |
+| `supabase login` | Liga a CLI à conta Supabase (abre o navegador para autorizar) |
+| `supabase link --project-ref <ref>` | Liga a pasta ao projeto na nuvem (pede a palavra-passe da base de dados, escrita pelo dono) |
+| `supabase db push` | Aplica à base de dados as migrações que ainda lá não estão |
+| `supabase migration list` | Mostra que migrações já foram aplicadas |
+| `supabase db lint` | Verifica as funções contra as tabelas reais (tipos, colunas) |
+| `npm run tipos:bd` (na pasta `frontend`) | Gera `modelos/base-de-dados.ts`: os tipos TypeScript das tabelas e funções, lidos da base de dados (`supabase gen types`). Correr de novo depois de cada migração |
+
+As três migrações, por ordem: `…_tabelas.sql` (tabelas, regras e índices), `…_seguranca.sql` (RLS e permissões) e `…_funcoes.sql` (`guardar_ficha`, `guardar_treino`). Uma migração já aplicada não se altera: uma mudança é sempre uma migração nova.
+
+A CLI também consegue correr uma cópia do Supabase no PC (`supabase start`), mas isso precisa do Docker; aqui trabalha-se diretamente com o projeto na nuvem.
+
+**Tamanho da app:** o cliente do Supabase faz a app inicial passar de 452 kB para 682 kB (165 kB comprimidos, o que viaja pela rede). O aviso do `angular.json` subiu de 500 kB para 750 kB; o limite de erro continua em 1 MB.
+
+## 9. Estrutura de pastas (novidades)
 
 ```
 projeto-angular/
 ├── supabase/
-│   └── migracoes/            o SQL, por ordem: 001 tabelas, 002 segurança (RLS), 003 funções
+│   ├── config.toml           configuração do projeto para a CLI
+│   └── migrations/           o SQL, por ordem: tabelas, segurança (RLS), funções
 └── frontend/src/
     ├── environments/         environment.ts: URL e chave pública do Supabase
     └── app/
@@ -145,17 +167,17 @@ projeto-angular/
         └── servicos/         + supabase-service, auth-service
 ```
 
-## 9. Plano de trabalho (um ramo e um PR por passo)
+## 10. Plano de trabalho (um ramo e um PR por passo)
 
 | # | Ramo | O que se faz |
 |---|---|---|
 | 11 | `planeamento-fase2` | Este documento |
-| 12 | `supabase` | SQL das tabelas, RLS e funções (corrido no SQL Editor do Supabase); `@supabase/supabase-js`, `environment.ts`, `SupabaseService`, `AuthService` |
+| 12 | `supabase` | SQL das tabelas, RLS e funções (aplicado com a Supabase CLI); `@supabase/supabase-js`, `environment.ts`, `SupabaseService`, `AuthService` |
 | 13 | `autenticacao` | Páginas de entrar, registar e recuperar a palavra-passe; guards; layout sem sessão; "Sair" no menu; configuração da autenticação no painel |
 | 14 | `dados-supabase` | `FichaService` e `TreinoService` na base de dados; estados a carregar/erro; treinos por enviar; importar os dados do aparelho |
 | 15 | `fase2-acabamento` | Sem rede com o Supabase (service worker), README, planeamento, publicação |
 
-## 10. Riscos e cuidados
+## 11. Riscos e cuidados
 
 - **Plano gratuito do Supabase:** o projeto é posto em pausa ao fim de 7 dias sem uso. Antes da apresentação, abrir o painel ou usar a app uns dias antes (reativar demora uns minutos).
 - **Emails de confirmação:** o serviço de email incluído no Supabase envia poucos emails por hora. Criar as contas de teste e de demonstração com antecedência; se for preciso, desligar a confirmação durante o desenvolvimento (decisão no passo 13).
