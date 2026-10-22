@@ -355,6 +355,19 @@ textarea {
   text-align: center;
 }
 
+/* Dados da base de dados que não carregaram: a mensagem e o botão "Tentar outra vez" */
+.estado-pedido {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.estado-pedido p {
+  margin: 0;
+}
+
 /* ---------- Painel que sobe do fundo do ecrã (escolhas rápidas) ---------- */
 .painel-fundo {
   position: fixed;

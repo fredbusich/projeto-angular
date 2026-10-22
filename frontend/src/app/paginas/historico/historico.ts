@@ -1,10 +1,11 @@
-import { DatePipe } from '@angular/common';
+import { DatePipe, I18nPluralPipe } from '@angular/common';
 import { Component, HostListener, Signal, computed, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TreinoCard } from '../../componentes/treino-card/treino-card';
 import { Painel } from '../../diretivas/painel';
 import { Treino } from '../../modelos/treino';
 import { PartilhaService } from '../../servicos/partilha-service';
+import { EstadoDados } from '../../servicos/supabase-service';
 import { TreinoService } from '../../servicos/treino-service';
 import { inicioDaSemana } from '../../utils/datas';
 
@@ -21,14 +22,26 @@ interface GrupoDoMes {
 }
 
 @Component({
-  imports: [RouterLink, DatePipe, TreinoCard, Painel],
+  imports: [RouterLink, DatePipe, I18nPluralPipe, TreinoCard, Painel],
   selector: 'app-historico',
   styleUrl: './historico.css',
   templateUrl: './historico.html',
 })
 export class Historico {
+  protected readonly pluralPorEnviar = {
+    '=1': '1 treino ainda não foi enviado para a tua conta. Está guardado neste aparelho e é enviado quando houver rede.',
+    other: '# treinos ainda não foram enviados para a tua conta. Estão guardados neste aparelho e são enviados quando houver rede.',
+  };
+
   protected readonly treinos: Signal<Treino[]>;
+  protected readonly estado: Signal<EstadoDados>;
+  protected readonly quantosPorEnviar: Signal<number>;
+  protected readonly enviando: Signal<boolean>;
+  protected readonly erroEnvio: Signal<string>;
+
   protected readonly paraApagar = signal<Treino | null>(null);
+  protected readonly aApagar = signal(false);
+  protected readonly erroApagar = signal('');
 
   // Os 7 dias desta semana (segunda a domingo), com os dias em que se treinou
   protected readonly dias = computed<DiaDaSemana[]>(() => {
@@ -63,6 +76,18 @@ export class Historico {
     private partilhaService: PartilhaService,
   ) {
     this.treinos = this.treinoService.treinos;
+    this.estado = this.treinoService.estado;
+    this.quantosPorEnviar = this.treinoService.quantosPorEnviar;
+    this.enviando = this.treinoService.enviando;
+    this.erroEnvio = this.treinoService.erroEnvio;
+  }
+
+  protected tentarOutraVez(): void {
+    this.treinoService.carregar();
+  }
+
+  protected enviarAgora(): void {
+    this.treinoService.enviarPendentes();
   }
 
   // O TreinoCard emitiu (partilhar): cria a imagem e abre a partilha (ou descarrega-a)
@@ -72,19 +97,33 @@ export class Historico {
 
   // O TreinoCard emitiu (apagar): pede confirmação primeiro
   protected pedirParaApagar(treino: Treino): void {
+    this.erroApagar.set('');
     this.paraApagar.set(treino);
   }
 
+  // O painel fica aberto até a base de dados responder; se falhar, mostra o erro lá dentro
   protected confirmarApagar(): void {
     const treino = this.paraApagar();
-    if (treino) {
-      this.treinoService.apagar(treino.id);
+    if (!treino) {
+      return;
     }
-    this.paraApagar.set(null);
+    this.aApagar.set(true);
+    this.treinoService.apagar(treino.id).subscribe({
+      next: () => {
+        this.aApagar.set(false);
+        this.paraApagar.set(null);
+      },
+      error: (erro: Error) => {
+        this.aApagar.set(false);
+        this.erroApagar.set(erro.message);
+      },
+    });
   }
 
   @HostListener('document:keydown.escape')
   protected cancelarApagar(): void {
-    this.paraApagar.set(null);
+    if (!this.aApagar()) {
+      this.paraApagar.set(null);
+    }
   }
 }

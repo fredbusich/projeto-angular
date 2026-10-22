@@ -14,6 +14,9 @@ export class AuthService {
 
   readonly utilizador = computed(() => this.sessao()?.user ?? null);
   readonly autenticado = computed(() => this.sessao() !== null);
+  // Só muda quando muda a pessoa (o utilizador acima muda também sempre que o token é renovado).
+  // O FichaService e o TreinoService seguem este signal para carregar ou esvaziar os dados.
+  readonly idUtilizador = computed(() => this.sessao()?.user.id ?? null);
   // true depois de se abrir o link "mudar a palavra-passe" que vai por email
   readonly emRecuperacao = signal(false);
 

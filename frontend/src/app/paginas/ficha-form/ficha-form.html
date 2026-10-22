@@ -1,6 +1,13 @@
 <h1 class="pagina-titulo">{{ modoEdicao ? 'Editar ficha' : 'Nova ficha' }}</h1>
 
-@if (naoEncontrada) {
+@if (modoEdicao && estado() === 'a-carregar') {
+  <p class="texto-secundario" role="status">A carregar a ficha…</p>
+} @else if (modoEdicao && estado() === 'erro') {
+  <div class="estado-pedido" role="alert">
+    <p class="texto-erro">Não foi possível carregar a ficha. Verifica a ligação à internet.</p>
+    <button type="button" class="botao" (click)="tentarOutraVez()">Tentar outra vez</button>
+  </div>
+} @else if (naoEncontrada()) {
   <p class="texto-erro">Esta ficha não existe (pode ter sido apagada).</p>
   <a routerLink="/fichas" class="botao">Voltar às fichas</a>
 } @else {
@@ -114,9 +121,16 @@
       @if (formulario.invalid) {
         <p class="texto-secundario pendentes">Para guardar falta: {{ pendentes }}.</p>
       }
-      <!-- [disabled]: enquanto o formulário for inválido, não se pode submeter -->
-      <button type="submit" class="botao botao-principal" [disabled]="formulario.invalid">
-        {{ modoEdicao ? 'Guardar alterações' : 'Guardar ficha' }}
+      @if (erro()) {
+        <p class="erro-geral" role="alert">{{ erro() }}</p>
+      }
+      <!-- [disabled]: enquanto o formulário for inválido (ou a guardar), não se pode submeter -->
+      <button type="submit" class="botao botao-principal" [disabled]="formulario.invalid || aGuardar()">
+        @if (aGuardar()) {
+          A guardar…
+        } @else {
+          {{ modoEdicao ? 'Guardar alterações' : 'Guardar ficha' }}
+        }
       </button>
       <a routerLink="/fichas" class="botao">Cancelar</a>
     </div>

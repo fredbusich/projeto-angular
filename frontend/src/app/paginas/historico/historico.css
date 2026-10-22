@@ -68,6 +68,21 @@
   gap: 10px;
 }
 
+.por-enviar {
+  margin-bottom: 24px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  border: 1px solid var(--destaque-linha);
+  border-radius: var(--raio);
+}
+
+.por-enviar p {
+  margin: 0;
+}
+
 .mes-titulo {
   color: var(--texto-secundario);
   font-size: 18px;

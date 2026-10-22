@@ -1,5 +1,5 @@
 import { DatePipe, DecimalPipe, I18nPluralPipe } from '@angular/common';
-import { Component, HostListener, OnDestroy, OnInit, computed, signal } from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit, computed, effect, signal, untracked } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { CalculadoraDiscos } from '../../componentes/calculadora-discos/calculadora-discos';
@@ -18,7 +18,7 @@ import { NomeExercicioPipe } from '../../pipes/nome-exercicio-pipe';
 import { FichaService } from '../../servicos/ficha-service';
 import { TreinoService } from '../../servicos/treino-service';
 
-type EstadoPagina = 'a-decorrer' | 'outro-em-curso' | 'ficha-inexistente';
+type EstadoPagina = 'a-carregar' | 'erro' | 'a-decorrer' | 'outro-em-curso' | 'ficha-inexistente';
 type Confirmacao = 'terminar' | 'cancelar';
 // Lista de exercícios aberta: para acrescentar ao treino, ou para substituir o exercício nesta posição
 type Seletor = { modo: 'adicionar' } | { modo: 'substituir'; indice: number };
@@ -45,7 +45,7 @@ export class Treino implements OnInit, OnDestroy {
   protected readonly pluralFeitas = { '=1': 'uma série feita', other: '# séries feitas' };
   protected readonly pluralRecordes = { '=1': 'Bateste 1 recorde', other: 'Bateste # recordes' };
 
-  protected readonly estado = signal<EstadoPagina>('a-decorrer');
+  protected readonly estado = signal<EstadoPagina>('a-carregar');
   protected readonly treino = signal<TreinoDados | null>(null);
   protected readonly agora = signal(Date.now());                 // muda a cada segundo (cronómetro)
   protected readonly descansoInicio = signal<number | null>(null); // null = sem descanso a decorrer
@@ -58,11 +58,25 @@ export class Treino implements OnInit, OnDestroy {
 
   // Quando já há outro treino a decorrer (só pode haver um de cada vez)
   protected outroTreino: TreinoDados | null = null;
-  // Calculados uma vez ao abrir o treino: o "anterior" e o recorde de cada exercício
-  protected anteriores: Record<string, Serie[]> = {};
-  protected recordes: Record<string, number> = {};
 
   // ---------- Valores calculados (computed) ----------
+  // O "anterior" e o recorde de cada exercício, a partir do histórico. Como são computed,
+  // atualizam-se sozinhos ao acrescentar ou trocar exercícios, e também se o histórico chegar
+  // da base de dados depois de o treino abrir.
+  protected readonly anteriores = computed(() => {
+    const resultado: Record<string, Serie[]> = {};
+    for (const exercicio of this.treino()?.exercicios ?? []) {
+      resultado[exercicio.exercicioId] = this.treinoService.ultimasSeries(exercicio.exercicioId);
+    }
+    return resultado;
+  });
+  protected readonly recordes = computed(() => {
+    const resultado: Record<string, number> = {};
+    for (const exercicio of this.treino()?.exercicios ?? []) {
+      resultado[exercicio.exercicioId] = this.treinoService.maiorCarga(exercicio.exercicioId);
+    }
+    return resultado;
+  });
   protected readonly segundosDecorridos = computed(() => {
     const treino = this.treino();
     return treino ? Math.max(0, (this.agora() - Date.parse(treino.inicio)) / 1000) : 0;
@@ -111,6 +125,7 @@ export class Treino implements OnInit, OnDestroy {
   });
 
   private fichaId = '';
+  private aEsperarDados = false; // true enquanto as fichas ou o histórico ainda não chegaram
   private parametros?: Subscription;
   private relogio?: ReturnType<typeof setInterval>;
   private temporizadorRecorde?: ReturnType<typeof setTimeout>;
@@ -120,7 +135,19 @@ export class Treino implements OnInit, OnDestroy {
     private router: Router,
     private fichaService: FichaService,
     private treinoService: TreinoService,
-  ) {}
+  ) {
+    // Se a página abriu antes de os dados chegarem da base de dados (ex.: recarregou em
+    // /treino/:fichaId), tenta outra vez sempre que o estado das fichas ou do histórico mudar
+    effect(() => {
+      this.fichaService.estado();
+      this.treinoService.estado();
+      untracked(() => {
+        if (this.aEsperarDados) {
+          this.carregar();
+        }
+      });
+    });
+  }
 
   // OnInit: lê o :fichaId do endereço. É um Observable porque o Angular reaproveita esta
   // página se se passar de /treino/A para /treino/B (e aí o ngOnInit não corre outra vez).
@@ -144,6 +171,7 @@ export class Treino implements OnInit, OnDestroy {
     this.confirmacao.set(null);
     this.opcoes.set(null);
     this.seletor.set(null);
+    this.aEsperarDados = false;
 
     const emCurso = this.treinoService.treinoEmCurso();
     if (emCurso && emCurso.fichaId !== this.fichaId) {
@@ -152,9 +180,28 @@ export class Treino implements OnInit, OnDestroy {
       return;
     }
     if (emCurso) {
-      this.abrir(emCurso); // o treino já estava a decorrer (ex.: a página recarregou)
+      // O treino já estava a decorrer (ex.: a página recarregou). Está no aparelho, por isso
+      // abre logo, mesmo sem rede; o "anterior" aparece quando o histórico chegar.
+      this.abrir(emCurso);
       return;
     }
+
+    // Para começar um treino novo é preciso o histórico (as cargas da última vez) e, se for
+    // de uma ficha, as fichas
+    const estados = [this.treinoService.estado()];
+    if (this.fichaId !== TREINO_LIVRE) {
+      estados.push(this.fichaService.estado());
+    }
+    if (estados.includes('a-carregar')) {
+      this.aEsperarDados = true;
+      this.estado.set('a-carregar');
+      return;
+    }
+    if (estados.includes('erro')) {
+      this.estado.set('erro');
+      return;
+    }
+
     if (this.fichaId === TREINO_LIVRE) {
       this.abrir(this.treinoService.iniciarVazio()); // "Começar treino vazio"
       return;
@@ -170,15 +217,19 @@ export class Treino implements OnInit, OnDestroy {
   private abrir(treino: TreinoDados): void {
     this.treino.set(treino);
     this.estado.set('a-decorrer');
-    treino.exercicios.forEach((exercicio) => this.lerHistorico(exercicio.exercicioId));
     this.agora.set(Date.now());
     this.relogio = setInterval(() => this.agora.set(Date.now()), 1000);
   }
 
-  // O "anterior" e o recorde de um exercício (ao abrir o treino e ao acrescentar ou trocar exercícios)
-  private lerHistorico(exercicioId: string): void {
-    this.anteriores[exercicioId] = this.treinoService.ultimasSeries(exercicioId);
-    this.recordes[exercicioId] = this.treinoService.maiorCarga(exercicioId);
+  // "Tentar outra vez" (sem rede ao abrir): volta a pedir o que falhou e espera por isso
+  protected tentarOutraVez(): void {
+    if (this.fichaService.estado() === 'erro') {
+      this.fichaService.carregar();
+    }
+    if (this.treinoService.estado() === 'erro') {
+      this.treinoService.carregar();
+    }
+    this.carregar();
   }
 
   // ---------- Outro treino a decorrer ----------
@@ -229,7 +280,7 @@ export class Treino implements OnInit, OnDestroy {
     if (!exercicio || !serie) {
       return;
     }
-    const anterior = this.recordes[exercicio.exercicioId] ?? 0;
+    const anterior = this.recordes()[exercicio.exercicioId] ?? 0;
     const melhorHoje = Math.max(0, ...exercicio.series.filter((s, i) => s.feita && i !== indiceSerie).map((s) => s.carga));
     if (anterior > 0 && serie.carga > Math.max(anterior, melhorHoje)) {
       this.novoRecorde.set({ nome: exercicio.nome, carga: serie.carga, anterior: Math.max(anterior, melhorHoje) });
@@ -240,7 +291,7 @@ export class Treino implements OnInit, OnDestroy {
 
   // A série passou o recorde que havia antes deste treino (mostra um troféu na linha)
   protected eRecorde(exercicioId: string, serie: Serie): boolean {
-    const anterior = this.recordes[exercicioId] ?? 0;
+    const anterior = this.recordes()[exercicioId] ?? 0;
     return serie.feita && anterior > 0 && serie.carga > anterior;
   }
 
@@ -327,7 +378,6 @@ export class Treino implements OnInit, OnDestroy {
       return;
     }
     const exercicio = { exercicioId: escolhido.id, nome: escolhido.nome, grupo: escolhido.grupo };
-    this.lerHistorico(escolhido.id);
 
     if (seletor.modo === 'adicionar') {
       // vai para o fim do treino; a lista fica aberta para se acrescentarem mais

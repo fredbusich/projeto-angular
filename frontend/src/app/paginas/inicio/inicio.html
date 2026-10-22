@@ -2,6 +2,29 @@
 <p class="hoje texto-secundario">{{ hoje | date: "EEEE, d 'de' MMMM" }}</p>
 <h1 class="pagina-titulo">{{ saudacao }}!</h1>
 
+<!-- Fichas e treinos da fase 1, que ficaram só neste aparelho: passam para a conta -->
+@if (mostrarImportar()) {
+  <section class="importar" aria-labelledby="titulo-importar">
+    <h2 id="titulo-importar">Dados deste aparelho</h2>
+    <p class="texto-secundario">
+      @let antigos = dadosAntigos();
+      Encontrámos {{ antigos.texto }} {{ antigos.guardados }} neste aparelho, de antes de haver contas.
+      Queres {{ antigos.importar }} para a tua conta?
+    </p>
+    @if (erroImportar()) {
+      <p class="erro-geral" role="alert">{{ erroImportar() }} O que já foi importado não se repete.</p>
+    }
+    <div class="importar-botoes">
+      <button type="button" class="botao botao-principal" [disabled]="aImportar()" (click)="importar()">
+        {{ aImportar() ? 'A importar…' : 'Importar' }}
+      </button>
+      <button type="button" class="botao" [disabled]="aImportar()" (click)="agoraNao()">Agora não</button>
+    </div>
+  </section>
+} @else if (importado()) {
+  <p class="mensagem-ok importar" role="status">Importado. As fichas já estão na tua conta e os treinos aparecem no histórico.</p>
+}
+
 <div class="grelha">
   <div class="comecar">
     <!-- O cartão de destaque muda conforme o caso: treino a decorrer, próximo treino ou boas-vindas -->
@@ -13,6 +36,15 @@
           {{ seriesFeitas(treino) }} de {{ totalSeries(treino) }} séries feitas · começou às {{ treino.inicio | date: 'HH:mm' }}
         </p>
         <a class="botao botao-escuro" [routerLink]="['/treino', treino.fichaId]">Continuar treino</a>
+      </section>
+    } @else if (estadoSugestao() === 'a-carregar') {
+      <section class="boas-vindas" role="status">
+        <p class="texto-secundario">A carregar as tuas fichas…</p>
+      </section>
+    } @else if (estadoSugestao() === 'erro') {
+      <section class="boas-vindas" role="alert">
+        <p class="texto-erro">Não foi possível carregar os teus dados. Verifica a ligação à internet.</p>
+        <button type="button" class="botao" (click)="tentarOutraVez()">Tentar outra vez</button>
       </section>
     } @else if (proxima(); as ficha) {
       <section class="destaque" aria-labelledby="titulo-destaque">
@@ -70,10 +102,20 @@
         <a routerLink="/historico" class="ver-tudo">Ver tudo</a>
       }
     </div>
-    @for (treino of ultimos(); track treino.id) {
-      <app-treino-card [treino]="treino" />
-    } @empty {
-      <p class="texto-secundario">Ainda não terminaste nenhum treino.</p>
+    @switch (estadoTreinos()) {
+      @case ('a-carregar') {
+        <p class="texto-secundario" role="status">A carregar os últimos treinos…</p>
+      }
+      @case ('erro') {
+        <p class="texto-erro">Não foi possível carregar os últimos treinos.</p>
+      }
+      @case ('pronto') {
+        @for (treino of ultimos(); track treino.id) {
+          <app-treino-card [treino]="treino" />
+        } @empty {
+          <p class="texto-secundario">Ainda não terminaste nenhum treino.</p>
+        }
+      }
     }
   </section>
 </div>

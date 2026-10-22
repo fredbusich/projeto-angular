@@ -10,17 +10,31 @@
     <h2 id="titulo-painel">Adicionar à ficha</h2>
     <p class="texto-secundario">{{ exercicio.nome | nomeExercicio }}</p>
 
-    @for (ficha of fichas(); track ficha.id) {
-      <button type="button" class="botao opcao-ficha" (click)="adicionarAFicha(ficha, exercicio)">
-        <span>{{ ficha.nome }}</span>
-        <span class="texto-secundario">{{ ficha.exercicios.length | i18nPlural: plural }}</span>
-      </button>
-    } @empty {
-      <p>Ainda não tens fichas de treino.</p>
-      <a routerLink="/fichas/nova" class="botao botao-principal">Criar uma ficha</a>
+    @switch (estadoFichas()) {
+      @case ('a-carregar') {
+        <p class="texto-secundario" role="status">A carregar as fichas…</p>
+      }
+      @case ('erro') {
+        <p class="texto-erro" role="alert">Não foi possível carregar as fichas.</p>
+        <button type="button" class="botao" (click)="carregarFichas()">Tentar outra vez</button>
+      }
+      @case ('pronto') {
+        @if (aAdicionar()) {
+          <p class="texto-secundario" role="status">A guardar na ficha…</p>
+        }
+        @for (ficha of fichas(); track ficha.id) {
+          <button type="button" class="botao opcao-ficha" [disabled]="aAdicionar()" (click)="adicionarAFicha(ficha, exercicio)">
+            <span>{{ ficha.nome }}</span>
+            <span class="texto-secundario">{{ ficha.exercicios.length | i18nPlural: plural }}</span>
+          </button>
+        } @empty {
+          <p>Ainda não tens fichas de treino.</p>
+          <a routerLink="/fichas/nova" class="botao botao-principal">Criar uma ficha</a>
+        }
+      }
     }
 
-    <button type="button" class="botao" (click)="fecharPainel()">Cancelar</button>
+    <button type="button" class="botao" [disabled]="aAdicionar()" (click)="fecharPainel()">Cancelar</button>
   </section>
 }
 

@@ -16,24 +16,51 @@
   </ol>
 </section>
 
-@for (mes of meses(); track mes.chave) {
-  <section class="mes" [attr.aria-labelledby]="'mes-' + mes.chave">
-    <h2 class="mes-titulo" [id]="'mes-' + mes.chave">{{ mes.data | date: 'MMMM y' }}</h2>
-    @for (treino of mes.treinos; track treino.id) {
-      <!-- pai -> filho com [treino] e [detalhado]; filho -> pai com (apagar) e (partilhar) -->
-      <app-treino-card
-        [treino]="treino"
-        [detalhado]="true"
-        (apagar)="pedirParaApagar($event)"
-        (partilhar)="partilhar($event)"
-      />
+<!-- Treinos terminados sem rede: estão guardados no aparelho e vão para a conta quando houver rede.
+     Enquanto o primeiro envio decorre (logo a seguir a terminar), não aparece. -->
+@if (quantosPorEnviar() > 0 && !enviando()) {
+  <section class="por-enviar" role="status">
+    <p>{{ quantosPorEnviar() | i18nPlural: pluralPorEnviar }}</p>
+    @if (erroEnvio()) {
+      <p class="texto-erro">{{ erroEnvio() }}</p>
     }
+    <button type="button" class="botao" (click)="enviarAgora()">Enviar agora</button>
   </section>
-} @empty {
-  <div class="vazio">
-    <p>Ainda não terminaste nenhum treino.</p>
-    <a routerLink="/fichas" class="botao botao-principal">Escolher uma ficha e treinar</a>
-  </div>
+}
+
+@switch (estado()) {
+  @case ('a-carregar') {
+    <p class="texto-secundario" role="status">A carregar o histórico…</p>
+  }
+
+  @case ('erro') {
+    <div class="estado-pedido" role="alert">
+      <p class="texto-erro">Não foi possível carregar o histórico. Verifica a ligação à internet.</p>
+      <button type="button" class="botao" (click)="tentarOutraVez()">Tentar outra vez</button>
+    </div>
+  }
+
+  @case ('pronto') {
+    @for (mes of meses(); track mes.chave) {
+      <section class="mes" [attr.aria-labelledby]="'mes-' + mes.chave">
+        <h2 class="mes-titulo" [id]="'mes-' + mes.chave">{{ mes.data | date: 'MMMM y' }}</h2>
+        @for (treino of mes.treinos; track treino.id) {
+          <!-- pai -> filho com [treino] e [detalhado]; filho -> pai com (apagar) e (partilhar) -->
+          <app-treino-card
+            [treino]="treino"
+            [detalhado]="true"
+            (apagar)="pedirParaApagar($event)"
+            (partilhar)="partilhar($event)"
+          />
+        }
+      </section>
+    } @empty {
+      <div class="vazio">
+        <p>Ainda não terminaste nenhum treino.</p>
+        <a routerLink="/fichas" class="botao botao-principal">Escolher uma ficha e treinar</a>
+      </div>
+    }
+  }
 }
 
 @if (paraApagar(); as treino) {
@@ -41,7 +68,12 @@
   <section class="painel" appPainel role="alertdialog" aria-modal="true" aria-labelledby="titulo-apagar">
     <h2 id="titulo-apagar">Apagar este treino?</h2>
     <p class="texto-secundario">«{{ treino.nomeFicha }}» de {{ treino.inicio | date: "d 'de' MMMM, HH:mm" }}. Não dá para desfazer.</p>
-    <button type="button" class="botao botao-perigo" (click)="confirmarApagar()">Apagar</button>
-    <button type="button" class="botao" (click)="cancelarApagar()">Cancelar</button>
+    @if (erroApagar()) {
+      <p class="erro-geral" role="alert">{{ erroApagar() }}</p>
+    }
+    <button type="button" class="botao botao-perigo" [disabled]="aApagar()" (click)="confirmarApagar()">
+      {{ aApagar() ? 'A apagar…' : 'Apagar' }}
+    </button>
+    <button type="button" class="botao" [disabled]="aApagar()" (click)="cancelarApagar()">Cancelar</button>
   </section>
 }

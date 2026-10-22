@@ -5,6 +5,9 @@
         <h3 class="treino-nome">{{ treino.nomeFicha }}</h3>
         <!-- pipe date: "segunda-feira, 20 out. · 18:40" -->
         <p class="treino-data">{{ treino.inicio | date: "EEEE, d MMM '·' HH:mm" }}</p>
+        @if (porEnviar) {
+          <span class="por-enviar">Por enviar</span>
+        }
       </div>
       <div class="treino-botoes">
         <button type="button" class="botao-icone" [attr.aria-label]="'Partilhar o treino ' + treino.nomeFicha + ' como imagem'" (click)="partilhar.emit(treino)">
@@ -50,6 +53,9 @@
     <div class="curto-info">
       <h3 class="treino-nome">{{ treino.nomeFicha }}</h3>
       <p class="treino-data">{{ treino.inicio | date: "EEE, d MMM" }} · {{ segundos | duracao: 'texto' }}</p>
+      @if (porEnviar) {
+        <span class="por-enviar">Por enviar</span>
+      }
     </div>
     <p class="curto-volume">{{ volume | number: '1.0-0' }} kg</p>
   </article>
