@@ -1,20 +1,24 @@
 <h1 class="pagina-titulo">Histórico</h1>
 
-<section class="semana" aria-labelledby="titulo-semana">
-  <div class="linha-titulo">
-    <h2 id="titulo-semana" class="semana-titulo">Esta semana</h2>
-    <span class="texto-secundario semana-datas">{{ dias()[0].data | date: 'd MMM' }} – {{ dias()[6].data | date: 'd MMM' }}</span>
-  </div>
-  <ol class="dias">
-    @for (dia of dias(); track $index) {
-      <li class="dia" [class.treinou]="dia.treinou" [class.hoje]="dia.hoje">
-        <span class="dia-nome">{{ dia.data | date: 'EEEEE' }}</span>
-        <span class="dia-numero">{{ dia.data | date: 'd' }}</span>
-        <span class="sr-only">{{ dia.treinou ? 'com treino' : 'sem treino' }}</span>
-      </li>
-    }
-  </ol>
-</section>
+<!-- Desde o primeiro treino: o resumo e o calendário, mês a mês, até ao início -->
+@if (resumo().desde; as desde) {
+  <section class="resumo" aria-label="Desde o primeiro treino">
+    <p class="resumo-desde texto-secundario">Desde {{ desde | date: "d 'de' MMMM 'de' y" }}</p>
+    <dl class="resumo-numeros">
+      <div><dt>Treinos</dt><dd>{{ resumo().treinos }}</dd></div>
+      <div><dt>Volume</dt><dd>{{ resumo().volume / 1000 | number: '1.0-1' }} t</dd></div>
+      <div><dt>A treinar</dt><dd>{{ resumo().segundos | duracao: 'curto' }}</dd></div>
+    </dl>
+  </section>
+}
+
+<!-- filho -> pai: o calendário avisa quando se carrega num dia com treino -->
+<app-calendario-treinos
+  class="calendario"
+  [treinosPorDia]="treinosPorDia()"
+  [primeiroTreino]="resumo().desde"
+  (escolherDia)="irParaDia($event)"
+/>
 
 <!-- Treinos terminados sem rede: estão guardados no aparelho e vão para a conta quando houver rede.
      Enquanto o primeiro envio decorre (logo a seguir a terminar), não aparece. -->
@@ -43,12 +47,18 @@
   @case ('pronto') {
     @for (mes of meses(); track mes.chave) {
       <section class="mes" [attr.aria-labelledby]="'mes-' + mes.chave">
-        <h2 class="mes-titulo" [id]="'mes-' + mes.chave">{{ mes.data | date: 'MMMM y' }}</h2>
+        <h2 class="mes-titulo" [id]="'mes-' + mes.chave">
+          {{ mes.data | date: 'MMMM y' }}
+          <span class="mes-contagem">· {{ mes.treinos.length | i18nPlural: pluralTreinos }}</span>
+        </h2>
         @for (treino of mes.treinos; track treino.id) {
-          <!-- pai -> filho com [treino] e [detalhado]; filho -> pai com (apagar) e (partilhar) -->
+          <!-- pai -> filho com [treino] e [detalhado]; filho -> pai com (editar), (apagar) e (partilhar) -->
           <app-treino-card
+            [id]="'treino-' + treino.id"
+            [class.destacado]="destacado() === treino.id"
             [treino]="treino"
             [detalhado]="true"
+            (editar)="editar($event)"
             (apagar)="pedirParaApagar($event)"
             (partilhar)="partilhar($event)"
           />

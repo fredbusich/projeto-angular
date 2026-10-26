@@ -28,6 +28,7 @@ export class MenuLateral {
     { rotulo: 'Início', rota: '/', exato: true, icone: 'M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z' },
     { rotulo: 'Fichas de treino', rota: '/fichas', exato: false, icone: 'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01' },
     { rotulo: 'Histórico', rota: '/historico', exato: false, icone: 'M12 7v5l3 2M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0' },
+    { rotulo: 'Progresso', rota: '/progresso', exato: false, icone: 'M3 20h18M6 16v-4M11 16V8M16 16v-6M20 16V5' },
     { rotulo: 'Exercícios', rota: '/exercicios', exato: false, icone: 'M6 7v10M3 9v6M18 7v10M21 9v6M6 12h12' },
   ];
 

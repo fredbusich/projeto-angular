@@ -34,8 +34,14 @@ Projeto prático do módulo de Fundamentos de Angular (UPSKILL), em duas fases e
 - O progresso fica guardado no aparelho a cada série, por isso o treino não se perde se a página recarregar, nem se não houver rede.
 
 **Histórico**
+- Resumo desde o primeiro treino: quantos treinos, volume total e tempo a treinar.
+- **Calendário** mês a mês, até ao primeiro treino, com os dias de treino marcados; carregar num dia leva a esse treino.
 - Treinos agrupados por mês, com duração, volume, séries, a melhor série de cada exercício e os recordes.
-- Cada treino pode ser **partilhado como imagem** (WhatsApp, Instagram…).
+- Cada treino pode ser **editado** depois de terminado (cargas, repetições, séries e exercícios) ou **partilhado como imagem** (WhatsApp, Instagram…).
+
+**Progresso**
+- **Gráfico da evolução** de cada exercício: a melhor série de cada treino ao longo do tempo, com a primeira vez, o melhor e a última vez.
+- **Recordes pessoais**: o melhor de cada exercício, com a data, filtrados por grupo muscular.
 
 **Exercícios**
 - Biblioteca de 1 500 exercícios, todos com animação.
@@ -69,6 +75,7 @@ O SQL está em `supabase/migrations/` e é aplicado com a **Supabase CLI** (`sup
 2. `…_seguranca.sql`: **RLS** em todas as tabelas (cada utilizador só lê e altera as suas linhas) e permissões só para quem tem sessão.
 3. `…_funcoes.sql`: `guardar_ficha` e `guardar_treino`, que gravam uma ficha ou um treino com todas as linhas numa só transação.
 4. `…_treino_com_id.sql`: o `guardar_treino` aceita o id criado na app, para um treino enviado duas vezes não ficar duplicado.
+5. `…_atualizar_treino.sql`: `atualizar_treino`, para editar um treino terminado (troca os exercícios e as séries numa só transação).
 
 Os tipos TypeScript das tabelas (`frontend/src/app/modelos/base-de-dados.ts`) são gerados a partir da base de dados com `npm run tipos:bd`.
 
@@ -100,7 +107,7 @@ As decisões da fase 2 estão em [`docs/planeamento-fase2.md`](docs/planeamento-
    npm start
    ```
 
-**Variáveis de ambiente:** a chave do Supabase não está no código nem no repositório. Antes do `npm start` e de cada build corre o `scripts/gerar-environment.mjs`, que escreve o `src/environments/environment.ts` a partir das variáveis `SUPABASE_URL` e `SUPABASE_KEY`: no computador vêm do `.env`, no GitHub Actions vêm dos Secrets do repositório. O `.env` e o `environment.ts` gerado não vão para o Git. Se faltar uma variável, ou se for posta a chave secreta, o script para e diz o que corrigir.
+**Variáveis de ambiente:** a chave do Supabase não está no código nem no repositório. Antes do `npm start` e de cada build corre o `scripts/gerar-environment.mjs`, que escreve os ficheiros de ambiente do Angular a partir das variáveis `SUPABASE_URL` e `SUPABASE_KEY`: o `src/environments/environment.ts` (produção) e o `environment.development.ts` (que o `angular.json` usa no `ng serve`). No computador as variáveis vêm do `.env`, no GitHub Actions vêm dos Secrets do repositório. O `.env` e os ficheiros gerados não vão para o Git. Se faltar uma variável, ou se for posta a chave secreta, o script para e diz o que corrigir.
 
 A chave pública acaba dentro do JavaScript da app publicada, porque o navegador tem de a enviar ao Supabase em cada pedido: foi feita para isso. Quem protege os dados é o RLS da base de dados. A chave secreta (*service_role*) nunca entra na app.
 
@@ -133,17 +140,17 @@ A app é publicada no **GitHub Pages** pelo **GitHub Actions** ([`.github/workfl
 
 | Requisito | Onde está (em `frontend/src/app/`) |
 |---|---|
-| Componentização | 10 páginas (`paginas/`), 9 componentes reutilizáveis (`componentes/`) e 2 de layout (`layout/`); `CartaoAuth` usa `<ng-content>` |
+| Componentização | 12 páginas (`paginas/`), 11 componentes reutilizáveis (`componentes/`) e 2 de layout (`layout/`); `CartaoAuth` usa `<ng-content>`; o gráfico do Progresso é SVG desenhado num componente (`GraficoProgresso`) |
 | Data binding, `@if` / `@for` / `@switch`, pipes | Two-way na pesquisa (`lista-exercicios.html`); `@switch` nos estados a carregar / erro / pronto e na página de treino; pipes `date`, `number` e `i18nPlural` em pt-PT e 2 pipes próprios (`pipes/`) |
-| `@Input` / `@Output` + `EventEmitter` | `ExercicioCard`, `FichaCard`, `SerieLinha`, `TreinoCard`, `ListaExercicios`, `ExerciciosParecidos`… |
-| Services, DI e interfaces | 10 services em `servicos/` com `@Injectable`, injetados pelo construtor (o `SupabaseService` no `AuthService`, `FichaService` e `TreinoService`); interfaces em `modelos/` |
+| `@Input` / `@Output` + `EventEmitter` | `ExercicioCard`, `FichaCard`, `SerieLinha`, `TreinoCard`, `ListaExercicios`, `CalendarioTreinos` (recebe os dias com treino, emite o dia escolhido)… |
+| Services, DI e interfaces | 11 services em `servicos/` com `@Injectable`, injetados pelo construtor (o `SupabaseService` no `AuthService`, `FichaService` e `TreinoService`; o `TreinoService` no `ProgressoService`); interfaces em `modelos/` |
 | HttpClient e dados externos | `servicos/exercicio-service.ts` (ExerciseDB, resposta tipada) e o Supabase nos services de dados; todas as páginas com «a carregar», erro e «Tentar outra vez» |
-| Router | `app.routes.ts`: 11 rotas e `**`, guards `sessaoGuard` (`CanActivateChildFn`) e `visitanteGuard` (`CanActivateFn`) em `guards/`, regresso à página pedida depois de entrar |
-| Reactive Forms | `paginas/ficha-form` (`FormGroup`, `FormControl`, `FormArray`, validadores próprios) e as páginas de conta (`Validators.email`, `minLength` e o validador de grupo `palavrasPasseIguais`) |
+| Router | `app.routes.ts`: 13 rotas e `**`, guards `sessaoGuard` (`CanActivateChildFn`) e `visitanteGuard` (`CanActivateFn`) em `guards/`, regresso à página pedida depois de entrar; Progresso e Editar treino com *lazy loading* (`loadComponent`) |
+| Reactive Forms | `paginas/ficha-form` (`FormGroup`, `FormControl`, `FormArray`, validadores próprios), `paginas/treino-editar` (um `FormArray` de séries dentro de um `FormArray` de exercícios) e as páginas de conta (`Validators.email`, `minLength` e o validador de grupo `palavrasPasseIguais`) |
 | `OnInit` / `OnDestroy` | `ListaExercicios`, `Treino`, `TemporizadorDescanso`… (`OnDestroy` cancela pedidos e para temporizadores) |
 | Supabase: autenticação e base de dados | Contas com email e palavra-passe (`servicos/auth-service.ts`); fichas e treinos em 5 tabelas Postgres com RLS (`supabase/migrations/`, `servicos/ficha-service.ts`, `servicos/treino-service.ts`) |
 | Produção no GitHub Actions, servida no GitHub Pages | `.github/workflows/publicar.yml`: `ng build --configuration production` e publicação no GitHub Pages a cada alteração na `main` |
-| Variáveis de ambiente para a chave do Supabase | `frontend/.env` (fora do Git, modelo em `.env.example`) e Secrets do GitHub Actions; `frontend/scripts/gerar-environment.mjs` escreve com elas o `src/environments/environment.ts` |
+| Variáveis de ambiente para a chave do Supabase | `frontend/.env` (fora do Git, modelo em `.env.example`) e Secrets do GitHub Actions; `frontend/scripts/gerar-environment.mjs` escreve com elas o `environment.ts` e o `environment.development.ts` (`fileReplacements` no `angular.json`) |
 
 O planeamento da fase 1 está em [`docs/planeamento.md`](docs/planeamento.md) e o da fase 2 em [`docs/planeamento-fase2.md`](docs/planeamento-fase2.md).
 
@@ -155,17 +162,17 @@ projeto-angular/
 ├── docs/                            planeamento das duas fases
 ├── supabase/
 │   ├── config.toml                  configuração para a Supabase CLI
-│   └── migrations/                  o SQL: tabelas, segurança (RLS) e funções
+│   └── migrations/                  o SQL: tabelas, segurança (RLS) e funções (5 migrações)
 └── frontend/                        a app Angular
     ├── .env.example                 modelo do .env (SUPABASE_URL e SUPABASE_KEY)
     ├── scripts/                     gerar-environment.mjs: o environment.ts a partir das variáveis
     ├── ngsw-config.json             o que o service worker guarda
     ├── public/                      ícones, manifesto e traduções
     └── src/
-        ├── environments/            environment.ts, gerado (fora do Git)
+        ├── environments/            environment.ts e environment.development.ts, gerados (fora do Git)
         └── app/
-            ├── paginas/             inicio, fichas, ficha-form, treino, historico, exercicios,
-            │                        entrar, registar, recuperar-palavra-passe, nova-palavra-passe
+            ├── paginas/             inicio, fichas, ficha-form, treino, historico, treino-editar, progresso,
+            │                        exercicios, entrar, registar, recuperar-palavra-passe, nova-palavra-passe
             ├── componentes/         cartões, listas, série, temporizador, calculadora de discos…
             ├── layout/              cabeçalho e menu lateral
             ├── guards/              sessao-guard, visitante-guard

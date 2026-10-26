@@ -8,6 +8,13 @@ export function inicioDaSemana(data: Date = new Date()): Date {
   return dia;
 }
 
+// "2026-10-22": o dia (na hora local) de uma data, para juntar os treinos do mesmo dia
+export function chaveDoDia(data: Date | string): string {
+  const d = new Date(data);
+  const doisDigitos = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${doisDigitos(d.getMonth() + 1)}-${doisDigitos(d.getDate())}`;
+}
+
 // Quantos dias passaram desde a data (0 = hoje, 1 = ontem…)
 export function diasAtras(dataIso: string, agora: Date = new Date()): number {
   const data = new Date(dataIso);

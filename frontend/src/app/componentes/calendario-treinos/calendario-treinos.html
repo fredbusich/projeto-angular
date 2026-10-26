@@ -1,0 +1,50 @@
+<section class="calendario" aria-labelledby="titulo-calendario">
+  <div class="calendario-topo">
+    <button type="button" class="botao-icone" aria-label="Mês anterior" [disabled]="!podeRecuar" (click)="mudarMes(-1)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
+    </button>
+    <div class="calendario-mes">
+      <h2 id="titulo-calendario">{{ mes() | date: 'MMMM y' }}</h2>
+      <span class="texto-secundario">{{ treinosNoMes | i18nPlural: plural }}</span>
+    </div>
+    <button type="button" class="botao-icone" aria-label="Mês seguinte" [disabled]="!podeAvancar" (click)="mudarMes(1)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
+    </button>
+  </div>
+
+  <table class="grelha">
+    <thead>
+      <tr>
+        @for (dia of diasDaSemana; track $index) {
+          <th scope="col">{{ dia }}</th>
+        }
+      </tr>
+    </thead>
+    <tbody>
+      @for (semana of semanas; track $index) {
+        <tr>
+          @for (dia of semana; track $index) {
+            <td>
+              @if (dia) {
+                @if (dia.treinos > 0) {
+                  <!-- Dia com treino: carregar leva ao treino na lista -->
+                  <button
+                    type="button"
+                    class="dia treinou"
+                    [class.hoje]="dia.hoje"
+                    [attr.aria-label]="dia.numero + ': ' + (dia.treinos | i18nPlural: plural) + '. Ver na lista'"
+                    (click)="escolherDia.emit(dia.chave)"
+                  >
+                    {{ dia.numero }}
+                  </button>
+                } @else {
+                  <span class="dia" [class.hoje]="dia.hoje">{{ dia.numero }}</span>
+                }
+              }
+            </td>
+          }
+        </tr>
+      }
+    </tbody>
+  </table>
+</section>

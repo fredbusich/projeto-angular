@@ -73,7 +73,7 @@ Os nomes das colunas ficam em `snake_case` (o costume no Postgres); o service co
 
 - **RLS (Row Level Security)** ligado em todas as tabelas: cada utilizador só lê e altera as suas linhas. `fichas` e `treinos`: `user_id = auth.uid()`. As tabelas "filhas" verificam o dono através da tabela "mãe" (ex.: uma linha de `ficha_exercicios` só é visível se a ficha for do utilizador).
 - A regra está **na base de dados**: mesmo que alguém use a chave pública fora da app, não vê os dados dos outros.
-- **Chaves:** a chave **pública** (*anon / publishable*) e o URL do projeto são variáveis de ambiente, como pede o enunciado novo (passo 16): `SUPABASE_URL` e `SUPABASE_KEY`, no `frontend/.env` (fora do Git; o modelo é o `.env.example`) e nos Secrets do GitHub Actions. O `scripts/gerar-environment.mjs` escreve com elas o `src/environments/environment.ts` (também fora do Git) antes do `npm start` e de cada build. A chave pública acaba no JavaScript publicado, porque o navegador a envia ao Supabase; foi feita para isso. A chave **`service_role` / secret** e a **palavra-passe da base de dados** nunca entram no código, no repositório nem em mensagens (o script recusa uma chave secreta).
+- **Chaves:** a chave **pública** (*anon / publishable*) e o URL do projeto são variáveis de ambiente, como pede o enunciado novo (passo 16): `SUPABASE_URL` e `SUPABASE_KEY`, no `frontend/.env` (fora do Git; o modelo é o `.env.example`) e nos Secrets do GitHub Actions. O `scripts/gerar-environment.mjs` escreve com elas o `src/environments/environment.ts` e o `environment.development.ts` (também fora do Git; o segundo é o que o `angular.json` põe no lugar do primeiro no `ng serve`, como gera o `ng generate environments`) antes do `npm start` e de cada build. A chave pública acaba no JavaScript publicado, porque o navegador a envia ao Supabase; foi feita para isso. A chave **`service_role` / secret** e a **palavra-passe da base de dados** nunca entram no código, no repositório nem em mensagens (o script recusa uma chave secreta).
 - As palavras-passe dos utilizadores são tratadas pelo Supabase Auth (cifradas); a app nunca as guarda.
 
 ## 4. Gravar dados: funções SQL
@@ -173,7 +173,7 @@ projeto-angular/
     ├── .env.example          modelo do .env (SUPABASE_URL e SUPABASE_KEY); o .env não vai para o Git
     ├── scripts/              gerar-environment.mjs: escreve o environment.ts a partir das variáveis
     └── src/
-        ├── environments/     environment.ts, gerado (fora do Git)
+        ├── environments/     environment.ts e environment.development.ts, gerados (fora do Git)
         └── app/
             ├── componentes/  + cartao-auth
             ├── guards/       sessao-guard, visitante-guard
@@ -192,6 +192,7 @@ projeto-angular/
 | 14 | `dados-supabase` | `FichaService` e `TreinoService` na base de dados; estados a carregar/erro; treinos por enviar; importar os dados do aparelho |
 | 15 | `fase2-acabamento` | Sem rede com o Supabase (sessão lida do aparelho, cópia das fichas e do histórico, aviso "sem ligação"), README, planeamento, publicação |
 | 16 | `variaveis-ambiente` | Enunciado novo (22/10): a chave do Supabase em variáveis de ambiente (`.env` e Secrets do GitHub Actions), fora do repositório; `--configuration production` explícito no build |
+| 17 | `melhorias-historico` | Histórico com calendário até ao primeiro treino e resumo desde o início; página Progresso (gráfico da evolução de cada exercício e recordes pessoais, `ProgressoService`); editar um treino terminado (migração 5, `atualizar_treino`); *lazy loading* destas duas páginas; o `environment.development.ts` do `ng generate environments` também gerado pelo script |
 
 ## 11. Riscos e cuidados
 

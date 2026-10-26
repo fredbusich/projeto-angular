@@ -211,6 +211,21 @@ export class TreinoService {
     this.definirEmCurso(null);
   }
 
+  // Editar um treino terminado (correções depois de o terminar). Se ainda está por enviar, muda
+  // só no aparelho e segue assim; senão, a função atualizar_treino troca-o na base de dados.
+  atualizar(treino: Treino): Observable<void> {
+    if (this.estaPorEnviar(treino.id)) {
+      this.gravarPorEnviar(this.porEnviar().map((t) => (t.id === treino.id ? treino : t)));
+      return of(undefined);
+    }
+    const consulta = this.supabase.cliente.rpc('atualizar_treino', { p_treino: treinoParaJson(treino) });
+    return this.supabase.pedido(consulta).pipe(
+      map(() => {
+        this.definirGuardados(this.guardados().map((t) => (t.id === treino.id ? treino : t)));
+      }),
+    );
+  }
+
   apagar(id: string): Observable<void> {
     // Ainda não foi enviado: basta tirá-lo do aparelho
     if (this.estaPorEnviar(id)) {
@@ -397,22 +412,7 @@ export class TreinoService {
 
   // A função guardar_treino recebe o treino em JSON, com os nomes da app (ver a migração 4)
   private enviar(treino: Treino): Observable<string> {
-    const consulta = this.supabase.cliente.rpc('guardar_treino', {
-      p_treino: {
-        id: treino.id,
-        fichaId: treino.fichaId,
-        nomeFicha: treino.nomeFicha,
-        inicio: treino.inicio,
-        fim: treino.fim,
-        exercicios: treino.exercicios.map((exercicio) => ({
-          exercicioId: exercicio.exercicioId,
-          nome: exercicio.nome,
-          grupo: exercicio.grupo,
-          notas: exercicio.notas ?? null,
-          series: exercicio.series.map((serie) => ({ ...serie })),
-        })),
-      },
-    });
+    const consulta = this.supabase.cliente.rpc('guardar_treino', { p_treino: treinoParaJson(treino) });
     return this.supabase.pedido(consulta);
   }
 
@@ -440,6 +440,24 @@ export class TreinoService {
 // Da base de dados (snake_case, três tabelas) para o modelo da app (camelCase, tudo junto).
 // As datas passam pelo toISOString() para ficarem no mesmo formato das criadas na app
 // (a base de dados escreve "+00:00" em vez de "Z"), porque há comparações entre elas.
+// O JSON que as funções guardar_treino e atualizar_treino recebem, com os nomes da app
+function treinoParaJson(treino: Treino) {
+  return {
+    id: treino.id,
+    fichaId: treino.fichaId,
+    nomeFicha: treino.nomeFicha,
+    inicio: treino.inicio,
+    fim: treino.fim,
+    exercicios: treino.exercicios.map((exercicio) => ({
+      exercicioId: exercicio.exercicioId,
+      nome: exercicio.nome,
+      grupo: exercicio.grupo,
+      notas: exercicio.notas ?? null,
+      series: exercicio.series.map((serie) => ({ ...serie })),
+    })),
+  };
+}
+
 function treinoDaBaseDeDados(linha: LinhaTreino): Treino {
   return {
     id: linha.id,

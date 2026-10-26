@@ -7,7 +7,11 @@ import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 const ficheiroEnv = fileURLToPath(new URL('../.env', import.meta.url));
-const destino = fileURLToPath(new URL('../src/environments/environment.ts', import.meta.url));
+// Os dois ficheiros do "ng generate environments": o angular.json usa o .development.ts no
+// "ng serve" (configuração development) e o environment.ts nos builds de produção
+const destinos = ['environment.ts', 'environment.development.ts'].map((nome) =>
+  fileURLToPath(new URL(`../src/environments/${nome}`, import.meta.url)),
+);
 
 // O .env só completa o que falta: uma variável que já exista no ambiente (ex.: no GitHub Actions) ganha
 if (existsSync(ficheiroEnv)) {
@@ -48,5 +52,7 @@ export const environment = {
 `;
 
 mkdirSync(fileURLToPath(new URL('../src/environments/', import.meta.url)), { recursive: true });
-writeFileSync(destino, conteudo);
-console.log('[gerar-environment] src/environments/environment.ts gerado a partir das variáveis de ambiente.');
+for (const destino of destinos) {
+  writeFileSync(destino, conteudo);
+}
+console.log('[gerar-environment] environment.ts e environment.development.ts gerados a partir das variáveis de ambiente.');

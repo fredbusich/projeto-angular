@@ -192,6 +192,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      atualizar_treino: { Args: { p_treino: Json }; Returns: string }
       guardar_ficha: {
         Args: {
           p_exercicios: Json

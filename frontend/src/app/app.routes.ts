@@ -31,6 +31,18 @@ export const routes: Routes = [
       { path: 'fichas/:id/editar', component: FichaForm, title: 'Editar ficha · RepLog' },
       { path: 'treino/:fichaId', component: Treino, title: 'Treino em curso · RepLog' },
       { path: 'historico', component: Historico, title: 'Histórico · RepLog' },
+      // loadComponent (lazy loading): o código destas duas páginas só é descarregado quando se abrem,
+      // por isso não pesa no arranque da app
+      {
+        path: 'historico/:id/editar',
+        loadComponent: () => import('./paginas/treino-editar/treino-editar').then((m) => m.TreinoEditar),
+        title: 'Editar treino · RepLog',
+      },
+      {
+        path: 'progresso',
+        loadComponent: () => import('./paginas/progresso/progresso').then((m) => m.Progresso),
+        title: 'Progresso · RepLog',
+      },
       { path: 'exercicios', component: Exercicios, title: 'Exercícios · RepLog' },
       { path: 'nova-palavra-passe', component: NovaPalavraPasse, title: 'Palavra-passe nova · RepLog' },
     ],

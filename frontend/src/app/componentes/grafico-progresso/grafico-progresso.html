@@ -1,0 +1,31 @@
+<svg
+  class="grafico"
+  [attr.viewBox]="'0 0 ' + largura + ' ' + altura"
+  role="img"
+  [attr.aria-label]="'Evolução em ' + unidade + ', de ' + (pontos[0].data | date: 'd MMM') + ' a ' + (pontos[pontos.length - 1].data | date: 'd MMM')"
+>
+  <!-- Linhas de fundo e números do eixo vertical -->
+  @for (marca of marcas; track marca) {
+    <line class="grelha" [attr.x1]="esquerda" [attr.x2]="largura - direita" [attr.y1]="yDe(marca)" [attr.y2]="yDe(marca)" />
+    <text class="eixo" [attr.x]="esquerda - 8" [attr.y]="yDe(marca) + 4" text-anchor="end">{{ marca | number: '1.0-1' }}</text>
+  }
+
+  <!-- Datas do primeiro e do último treino -->
+  <text class="eixo" [attr.x]="esquerda" [attr.y]="baixo + 22">{{ pontos[0].data | date: 'd MMM' }}</text>
+  <text class="eixo" [attr.x]="largura - direita" [attr.y]="baixo + 22" text-anchor="end">{{ pontos[pontos.length - 1].data | date: 'd MMM' }}</text>
+
+  <!-- A linha e um ponto por treino -->
+  <path class="linha" [attr.d]="linha" />
+  @for (d of desenhados; track $index) {
+    <circle [class.recorde]="d.recorde" class="ponto" [attr.cx]="d.x" [attr.cy]="d.y" [attr.r]="d.recorde ? 6 : 4">
+      <title>{{ descricao(d.ponto) }}</title>
+    </circle>
+  }
+
+  <!-- O melhor de todos, com o valor por cima -->
+  @if (melhor; as m) {
+    <text class="valor-recorde" [attr.x]="m.x" [attr.y]="m.y - 12" [attr.text-anchor]="m.x > largura - 80 ? 'end' : m.x < esquerda + 40 ? 'start' : 'middle'">
+      {{ porRepeticoes ? m.ponto.repeticoes : (m.ponto.carga | number: '1.0-2') }} {{ porRepeticoes ? 'rep.' : 'kg' }}
+    </text>
+  }
+</svg>
