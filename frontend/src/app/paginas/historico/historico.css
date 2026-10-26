@@ -1,64 +1,48 @@
-.semana {
-  margin-bottom: 24px;
-  padding: 14px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+/* ---------- Desde o primeiro treino ---------- */
+.resumo {
+  margin-bottom: 12px;
+}
+
+.resumo-desde {
+  margin: 0 0 8px;
+  font-size: 14px;
+}
+
+.resumo-numeros {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.resumo-numeros div {
+  padding: 10px 12px;
   border: 1px solid var(--linha);
-  border-radius: 20px;
+  border-radius: var(--raio-pequeno);
   background: var(--cartao);
 }
 
-.semana-titulo {
-  font-family: var(--letra-texto);
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.semana-datas {
-  font-size: 13px;
-}
-
-.dias {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 4px;
-  text-align: center;
-}
-
-.dia {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-}
-
-.dia-nome {
+.resumo-numeros dt {
   color: var(--texto-secundario);
   font-size: 12px;
-  text-transform: uppercase;
 }
 
-.dia-numero {
-  width: 36px;
-  height: 36px;
-  display: grid;
-  place-items: center;
-  border: 1px solid transparent;
-  border-radius: 50%;
-  font-weight: 600;
+.resumo-numeros dd {
+  margin: 0;
+  font-family: var(--letra-titulo);
+  font-size: 24px;
+  font-weight: 700;
 }
 
-.dia.hoje .dia-numero {
-  border-color: var(--texto);
+.calendario {
+  margin-bottom: 24px;
 }
 
-.dia.treinou .dia-numero {
-  background: var(--destaque);
-  color: var(--sobre-destaque);
+/* O treino do dia escolhido no calendário fica com um contorno uns segundos */
+app-treino-card.destacado {
+  border-radius: 20px;
+  outline: 2px solid var(--destaque-linha);
+  outline-offset: 2px;
 }
 
 .mes {
@@ -105,8 +89,16 @@
   margin: 0;
 }
 
+.mes-contagem {
+  font-family: var(--letra-texto);
+  font-size: 14px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
 @media (min-width: 768px) {
-  .semana {
+  .resumo,
+  .calendario {
     max-width: 520px;
   }
 }

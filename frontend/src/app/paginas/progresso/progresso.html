@@ -1,0 +1,101 @@
+<h1 class="pagina-titulo">Progresso</h1>
+
+@switch (estado()) {
+  @case ('a-carregar') {
+    <p class="texto-secundario" role="status">A carregar o histórico…</p>
+  }
+
+  @case ('erro') {
+    <div class="estado-pedido" role="alert">
+      <p class="texto-erro">Não foi possível carregar o histórico. Verifica a ligação à internet.</p>
+      <button type="button" class="botao" (click)="tentarOutraVez()">Tentar outra vez</button>
+    </div>
+  }
+
+  @case ('pronto') {
+    @if (exercicios().length === 0) {
+      <div class="vazio">
+        <p>Ainda não há treinos para mostrar a evolução. Termina o primeiro e volta aqui.</p>
+        <a routerLink="/fichas" class="botao botao-principal">Escolher uma ficha e treinar</a>
+      </div>
+    } @else {
+      <!-- Evolução de um exercício -->
+      <section class="cartao-secao" aria-labelledby="titulo-evolucao">
+        <h2 id="titulo-evolucao" class="subtitulo">Evolução</h2>
+
+        <label class="rotulo" for="escolher-exercicio">Exercício</label>
+        <!-- [ngModel] + (ngModelChange): o select mostra o escolhido e avisa quando muda -->
+        <select id="escolher-exercicio" class="campo" [ngModel]="exercicioId()" (ngModelChange)="escolher($event)">
+          @for (e of exercicios(); track e.exercicioId) {
+            <option [value]="e.exercicioId">{{ e.nome | nomeExercicio }} ({{ e.vezes | i18nPlural: pluralVezes }})</option>
+          }
+        </select>
+
+        @if (pontos().length > 1) {
+          <app-grafico-progresso [pontos]="pontos()" />
+        } @else {
+          <p class="texto-secundario">Só fizeste este exercício uma vez: o gráfico aparece a partir do segundo treino.</p>
+        }
+
+        @if (numeros(); as n) {
+          <dl class="numeros">
+            <div>
+              <dt>Primeira vez</dt>
+              <dd>{{ n.primeira.carga | number: '1.0-2' }} kg × {{ n.primeira.repeticoes }}</dd>
+              <span class="texto-secundario">{{ n.primeira.data | date: 'd MMM' }}</span>
+            </div>
+            <div class="numero-melhor">
+              <dt>Melhor</dt>
+              <dd>{{ n.melhor.carga | number: '1.0-2' }} kg × {{ n.melhor.repeticoes }}</dd>
+              <span class="texto-secundario">{{ n.melhor.data | date: 'd MMM' }}</span>
+            </div>
+            <div>
+              <dt>Última vez</dt>
+              <dd>{{ n.ultima.carga | number: '1.0-2' }} kg × {{ n.ultima.repeticoes }}</dd>
+              <span class="texto-secundario">{{ n.ultima.data | date: 'd MMM' }}</span>
+            </div>
+          </dl>
+          @if (n.subiu > 0) {
+            <p class="subiu">+{{ n.subiu | number: '1.0-2' }} kg desde a primeira vez</p>
+          }
+        }
+      </section>
+
+      <!-- Recordes pessoais -->
+      <section class="cartao-secao" aria-labelledby="titulo-recordes">
+        <div class="linha-titulo">
+          <h2 id="titulo-recordes" class="subtitulo">Recordes pessoais</h2>
+          <span class="texto-secundario">{{ recordesVisiveis().length }}</span>
+        </div>
+
+        <div class="chips" role="group" aria-label="Filtrar por grupo muscular">
+          <button type="button" class="chip" [attr.aria-pressed]="grupo() === ''" (click)="grupo.set('')">Todos</button>
+          @for (g of gruposComRecordes(); track g) {
+            <button type="button" class="chip" [attr.aria-pressed]="grupo() === g" (click)="grupo.set(g)">{{ nomesGrupos[g] }}</button>
+          }
+        </div>
+
+        <ul class="recordes">
+          @for (r of recordesVisiveis(); track r.exercicioId) {
+            <li>
+              <!-- filho -> pai por evento normal: carregar num recorde mostra-o no gráfico -->
+              <button type="button" class="recorde" (click)="verNoGrafico(r.exercicioId)">
+                <span class="recorde-nome">
+                  <strong>{{ r.nome | nomeExercicio }}</strong>
+                  <span class="texto-secundario">{{ nomesGrupos[r.grupo] }} · {{ r.data | date: 'd MMM y' }}</span>
+                </span>
+                <span class="recorde-valor">
+                  @if (r.melhor.carga > 0) {
+                    {{ r.melhor.carga | number: '1.0-2' }} kg × {{ r.melhor.repeticoes }}
+                  } @else {
+                    {{ r.melhor.repeticoes }} rep.
+                  }
+                </span>
+              </button>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+  }
+}

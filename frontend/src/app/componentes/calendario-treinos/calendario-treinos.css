@@ -1,0 +1,84 @@
+:host {
+  display: block;
+}
+
+.calendario {
+  padding: 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border: 1px solid var(--linha);
+  border-radius: 20px;
+  background: var(--cartao);
+}
+
+.calendario-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.calendario-mes {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 13px;
+}
+
+.calendario-mes h2 {
+  font-family: var(--letra-texto);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.calendario-mes h2::first-letter {
+  text-transform: uppercase;
+}
+
+.grelha {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  text-align: center;
+}
+
+.grelha th {
+  padding-bottom: 6px;
+  color: var(--texto-secundario);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.grelha td {
+  padding: 3px 0;
+}
+
+.dia {
+  width: 36px;
+  height: 36px;
+  margin: 0 auto;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+}
+
+.dia.hoje {
+  border-color: var(--texto);
+}
+
+.dia.treinou {
+  background: var(--destaque);
+  color: var(--sobre-destaque);
+  cursor: pointer;
+}
+
+.dia.treinou:hover {
+  filter: brightness(0.9);
+}

@@ -1,0 +1,96 @@
+<h1 class="pagina-titulo">Editar treino</h1>
+
+@if (estado() === 'a-carregar') {
+  <p class="texto-secundario" role="status">A carregar o treino…</p>
+} @else if (estado() === 'erro') {
+  <div class="estado-pedido" role="alert">
+    <p class="texto-erro">Não foi possível carregar o treino. Verifica a ligação à internet.</p>
+    <button type="button" class="botao" (click)="tentarOutraVez()">Tentar outra vez</button>
+  </div>
+} @else if (naoEncontrado()) {
+  <p class="texto-erro">Este treino não existe (pode ter sido apagado).</p>
+  <a routerLink="/historico" class="botao">Voltar ao histórico</a>
+} @else if (original(); as treino) {
+  <p class="treino-info texto-secundario">
+    <strong>{{ treino.nomeFicha }}</strong> · {{ treino.inicio | date: "EEEE, d 'de' MMMM, HH:mm" }}
+  </p>
+
+  <form class="formulario" [formGroup]="formulario" (ngSubmit)="guardar()" novalidate>
+    <ol class="exercicios" formArrayName="exercicios">
+      @for (exercicio of exercicios.controls; track exercicio; let i = $index) {
+        <li class="exercicio" [formGroupName]="i">
+          <div class="exercicio-topo">
+            <img class="miniatura" [src]="imagem(exercicio.controls.exercicioId.value)" alt="" width="44" height="44" loading="lazy" (error)="miniatura.classList.add('falhou')" #miniatura />
+            <div class="exercicio-nome">
+              <strong>{{ exercicio.controls.nome.value | nomeExercicio }}</strong>
+              <span class="texto-secundario">{{ nomesGrupos[exercicio.controls.grupo.value] }}</span>
+            </div>
+            <button type="button" class="botao-icone" [attr.aria-label]="'Remover ' + (exercicio.controls.nome.value | nomeExercicio)" (click)="removerExercicio(i)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+            </button>
+          </div>
+
+          <!-- As séries: outro FormArray, dentro do exercício -->
+          <div class="series-cabecalho" aria-hidden="true">
+            <span>Série</span><span>kg</span><span>Reps</span><span>Feita</span><span></span>
+          </div>
+          <ol class="series" formArrayName="series">
+            @for (serie of exercicio.controls.series.controls; track serie; let s = $index) {
+              <li class="serie" [formGroupName]="s">
+                <span class="serie-numero">{{ s + 1 }}</span>
+                <input class="campo" type="number" inputmode="decimal" step="0.5" min="0" max="999" formControlName="carga"
+                  [attr.aria-label]="'Carga da série ' + (s + 1) + ' em kg'" [attr.aria-invalid]="mostrarErro(serie.controls.carga)" />
+                <input class="campo" type="number" inputmode="numeric" min="0" max="100" formControlName="repeticoes"
+                  [attr.aria-label]="'Repetições da série ' + (s + 1)" [attr.aria-invalid]="mostrarErro(serie.controls.repeticoes)" />
+                <input class="feita" type="checkbox" formControlName="feita" [attr.aria-label]="'Série ' + (s + 1) + ' feita'" />
+                <button type="button" class="botao-icone" [attr.aria-label]="'Remover a série ' + (s + 1)" (click)="removerSerie(exercicio, s)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 12h12" /></svg>
+                </button>
+              </li>
+              @if (mostrarErro(serie.controls.carga)) {
+                <li class="erro-campo">A carga tem de estar entre 0 e 999 kg.</li>
+              }
+              @if (mostrarErro(serie.controls.repeticoes)) {
+                <li class="erro-campo">As repetições têm de ser um número inteiro entre 0 e 100.</li>
+              }
+            }
+          </ol>
+          @if (exercicio.controls.series.length === 0 && exercicio.controls.series.touched) {
+            <p class="erro-campo">Deixa pelo menos uma série, ou remove o exercício.</p>
+          }
+          <button type="button" class="botao botao-tracejado" (click)="adicionarSerie(exercicio)">+ Série</button>
+
+          <input class="campo" type="text" formControlName="notas" maxlength="200" placeholder="Notas (opcional)" aria-label="Notas do exercício" />
+        </li>
+      }
+    </ol>
+
+    @if (exercicios.length === 0 && exercicios.touched) {
+      <p class="erro-campo">O treino precisa de pelo menos um exercício.</p>
+    }
+    <button type="button" class="botao botao-tracejado" (click)="abrirSeletor()">+ Adicionar exercício</button>
+
+    <div class="acoes">
+      @if (erro()) {
+        <p class="erro-geral" role="alert">{{ erro() }}</p>
+      }
+      <!-- [disabled]: enquanto o formulário for inválido (ou a guardar), não se pode submeter -->
+      <button type="submit" class="botao botao-principal" [disabled]="formulario.invalid || aGuardar()">
+        {{ aGuardar() ? 'A guardar…' : 'Guardar alterações' }}
+      </button>
+      <a routerLink="/historico" class="botao">Cancelar</a>
+    </div>
+  </form>
+}
+
+<!-- Painel para escolher um exercício: a mesma lista da página Exercícios -->
+@if (seletorAberto()) {
+  <button type="button" class="painel-fundo" aria-label="Fechar" (click)="fecharSeletor()"></button>
+  <section class="painel painel-grande" appPainel role="dialog" aria-modal="true" aria-labelledby="titulo-seletor">
+    <div class="linha-titulo">
+      <h2 id="titulo-seletor">Adicionar exercício</h2>
+      <button type="button" class="botao" (click)="fecharSeletor()">Fechar</button>
+    </div>
+    <app-lista-exercicios (escolher)="adicionarExercicio($event)" />
+  </section>
+}

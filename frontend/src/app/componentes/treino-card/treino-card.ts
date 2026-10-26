@@ -17,7 +17,8 @@ export class TreinoCard {
   @Input({ required: true }) treino!: Treino;
   @Input() detalhado = false;   // true no Histórico: mostra os exercícios e o botão de apagar
 
-  // filho -> pai: pedir para apagar ou partilhar este treino
+  // filho -> pai: pedir para editar, apagar ou partilhar este treino
+  @Output() editar = new EventEmitter<Treino>();
   @Output() apagar = new EventEmitter<Treino>();
   @Output() partilhar = new EventEmitter<Treino>();
 

@@ -1,0 +1,44 @@
+:host {
+  display: block;
+}
+
+.grafico {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+
+.grelha {
+  stroke: var(--linha);
+  stroke-width: 1;
+}
+
+.eixo {
+  fill: var(--texto-secundario);
+  font-size: 12px;
+}
+
+.linha {
+  fill: none;
+  stroke: var(--destaque-linha);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.ponto {
+  fill: var(--cartao);
+  stroke: var(--destaque-linha);
+  stroke-width: 2;
+}
+
+.ponto.recorde {
+  fill: var(--destaque-linha);
+}
+
+.valor-recorde {
+  fill: var(--texto);
+  font-size: 13px;
+  font-weight: 700;
+}
